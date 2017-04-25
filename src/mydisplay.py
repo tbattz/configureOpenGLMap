@@ -6,6 +6,7 @@
 
 import tkinter as tk
 from tkinter import ttk
+import tkMessageBox
 
 import subprocess as sp
 
@@ -28,19 +29,89 @@ class Display(ttk.Frame):
         # Create Resolution Label
         self.resLabel = ttk.Label(self, text="Resolution").grid(column=0, row=2, sticky=tk.W)    
         # Create Resolution Entry Boxes
-        self.xResEntry = tk.Entry(self,width=10)
+        self.xResVar = tk.StringVar()
+        self.xResEntry = tk.Entry(self,textvariable=self.xResVar,width=10)
         self.xResEntry.insert(0,self.monitors[0].currRes[0])
         self.xResEntry.grid(column=1, row=2, sticky=tk.W)
-        self.yResEntry = tk.Entry(self,width=10)
+        self.yResVar = tk.StringVar()
+        self.yResEntry = tk.Entry(self,textvariable=self.yResVar,width=10)
         self.yResEntry.insert(0,self.monitors[0].currRes[1])
         self.yResEntry.grid(column=2, row=2, sticky=tk.W)
         # Create Fullscreen checkbox
         self.fsCheckVar = tk.IntVar()
         self.fsCheckbox = ttk.Checkbutton(self,text="Fullscreen",variable=self.fsCheckVar)
         self.fsCheckbox.grid(column=3,row=2,sticky=tk.W)
+        # Add Traces
+        self.resChange = False
+        self.varMonList.trace("w",self.on_monitor_changed)
+        self.xResVar.trace("w",self.on_res_entry_changed)
+        self.yResVar.trace("w",self.on_res_entry_changed)
+        self.fsCheckVar.trace("w",self.on_fullscreen_toggle)
+        
+    def on_monitor_changed(self,*args):
+        # Check Monitor exists
+        stringVar = self.varMonList.get()
+        colonPos = stringVar.find(":")
+        num = int(stringVar[:colonPos]) - 1
+        if (num>len(self.monList) or num<0):
+            tkMessageBox.showerror(message="Monitor doesn't exist! Setting to primary monitor.")
+            self.varMonList.set(self.monList[0])
+        # Update Resolution
+        self.xResVar.set(str(self.monitors[num].currRes[0]))
+        self.yResVar.set(str(self.monitors[num].currRes[1]))
+        
+    def on_res_entry_changed(self,*args):
+        if (not self.resChange):
+            self.resChange = True
+            # Get monitor properties
+            stringVar = self.varMonList.get()
+            colonPos = stringVar.find(":")
+            num = int(stringVar[:colonPos]) - 1
+            maxXRes = int(self.monitors[num].currRes[0])
+            maxYRes = int(self.monitors[num].currRes[1])
+            # Check if in range
+            xStr = self.xResVar.get()
+            yStr = self.yResVar.get()
+            if(len(xStr)>0 and len(yStr)>0):
+                if (xStr.isdigit() and yStr.isdigit()):
+                    xRes = int(xStr)
+                    yRes = int(yStr)
+                    if ((xRes < 0) or (xRes > maxXRes)):
+                        msg = "x Resolution too large, setting to %i." % maxXRes
+                        tkMessageBox.showerror(message=msg)
+                        self.xResVar.set(str(maxXRes))
+                    if ((yRes < 0) or (yRes > maxYRes)):
+                        msg = "y Resolution too large, setting to %i." % maxYRes
+                        tkMessageBox.showerror(message=msg)
+                        self.yResVar.set(str(maxYRes))
+                else:
+                    tkMessageBox.showerror(message="Entry must be numeric.")
+                    self.xResVar.set(str(maxXRes))
+                    self.yResVar.set(str(maxYRes))
+                    
+            self.resChange = False
         
         
-
+    def on_fullscreen_toggle(self,*args):
+        fullscreenTog = self.fsCheckVar.get()
+        if(fullscreenTog):
+            # Set res entries to max
+            stringVar = self.varMonList.get()
+            colonPos = stringVar.find(":")
+            num = int(stringVar[:colonPos]) - 1
+            maxXRes = int(self.monitors[num].currRes[0])
+            maxYRes = int(self.monitors[num].currRes[1])
+            self.xResVar.set(str(maxXRes))
+            self.yResVar.set(str(maxYRes))
+            # Grey out res entries
+            self.xResEntry.config(state='disabled')
+            self.yResEntry.config(state='disabled')
+        else:
+            # Enable entry box
+            self.xResEntry.config(state='normal')
+            self.yResEntry.config(state='normal')
+            
+        
 class Monitor:
     def __init__(self,port,id,currRes,currFps,mmSize):
         self.port       = port      # e.g. HDMI-0

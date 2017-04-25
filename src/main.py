@@ -25,7 +25,6 @@ mainFrame.rowconfigure(0,weight=1)
 displayFrame = mydisplay.Display(root,mainFrame)
 displayFrame.grid(column=0,row=0)
 
-
 # Add horizontal line
 ttk.Separator(mainFrame,orient=HORIZONTAL).grid(column=0,row=1,sticky='ew')
 
