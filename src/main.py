@@ -28,15 +28,16 @@ displayFrame.grid(column=0,row=0)
 # Add horizontal line
 ttk.Separator(mainFrame,orient=HORIZONTAL).grid(column=0,row=1,sticky='ew')
 
-
 # Create Generate section
-generateFrame = tools.Generate(mainFrame)
+generateFrame = tools.Generate(mainFrame,displayFrame)
 generateFrame.grid(column=0,row=2)
+
+
+
 
 
 # Close on Escape
 root.bind('<Escape>',tools.close)
- 
 
 # Show gui
 root.mainloop()

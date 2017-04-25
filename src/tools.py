@@ -6,8 +6,11 @@
 
 import tkinter as tk
 from tkinter import ttk
+import tkMessageBox
+import getpass
 
-import sys
+import os, sys
+import time
 
 
 # Close window on ESC
@@ -18,9 +21,11 @@ def close(event):
 
 
 class Generate(ttk.Frame):   
-    def __init__(self,mainFrame):
+    def __init__(self,mainFrame,displayFrame):
         # Create Generate frame
         ttk.Frame.__init__(self,mainFrame,padding="3 3 3 3")
+        self.mainFrame = mainFrame
+        self.displayFrame = displayFrame
         # Create Load Button
         self.loadButton = tk.Button(self,text="Load Config",command=self.on_load_config)
         self.loadButton.grid(column=0,row=0)
@@ -38,4 +43,25 @@ class Generate(ttk.Frame):
         print 1
     
     def on_gen_config(self):
-        print 1
+        # Check Config directory exists
+        if not os.path.isdir('../../Configs'):
+            os.mkdir('../../Configs')
+        # Print Header
+        filename = '../../Configs/currentConfig.txt'
+        f = open(filename,'w')
+        f.write("# OpenGLMap Configuration File\n")
+        f.write("# Created %s by %s\n" % (time.strftime("%c"),getpass.getuser()))
+        f.write("\n")
+        # Display Section 
+        f.write("# Display Settings\n")
+        f.write("screenID: int %i\n" % self.displayFrame.currMon)
+        f.write("xRes: int %i\n" % int(self.displayFrame.xResVar.get()))
+        f.write("yRes: int %i\n" % int(self.displayFrame.yResVar.get()))
+        f.write("fullscreen: bool %i\n" % self.displayFrame.fsCheckVar.get())
+        
+        # Close file
+        f.close()
+        
+        # Show dialog
+        tkMessageBox.showinfo(message="File written to %s" % filename)
+        

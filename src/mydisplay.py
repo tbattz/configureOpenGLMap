@@ -22,6 +22,7 @@ class Display(ttk.Frame):
         # Create Monitor selection
         self.monitors = getMonitors(root)
         self.monList = getMonitorStrings(self.monitors)
+        self.currMon = 0
         self.varMonList = tk.StringVar()
         self.varMonList.set(self.monList[0])
         self.dropDownBox = tk.OptionMenu(self,self.varMonList,*self.monList)
@@ -53,6 +54,7 @@ class Display(ttk.Frame):
         stringVar = self.varMonList.get()
         colonPos = stringVar.find(":")
         num = int(stringVar[:colonPos]) - 1
+        self.currMon = num
         if (num>len(self.monList) or num<0):
             tkMessageBox.showerror(message="Monitor doesn't exist! Setting to primary monitor.")
             self.varMonList.set(self.monList[0])
