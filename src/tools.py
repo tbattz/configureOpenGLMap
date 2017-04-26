@@ -54,7 +54,7 @@ class Generate(ttk.Frame):
         f.write("\n")
         # Display Section 
         f.write("# Display Settings\n")
-        f.write("screenID: int %i\n" % self.displayFrame.currMon)
+        f.write("screenID: int %i\n" % (self.displayFrame.currMon+1))
         f.write("xRes: int %i\n" % int(self.displayFrame.xResVar.get()))
         f.write("yRes: int %i\n" % int(self.displayFrame.yResVar.get()))
         f.write("fullscreen: bool %i\n" % self.displayFrame.fsCheckVar.get())
