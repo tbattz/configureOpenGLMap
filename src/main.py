@@ -9,7 +9,7 @@ from tkinter import ttk
 
 
 
-import mydisplay, tools
+import mydisplay, tools, aircraft
 
 # Init Tkinter
 root = Tk()
@@ -23,14 +23,21 @@ mainFrame.rowconfigure(0,weight=1)
 
 # Add Display section
 displayFrame = mydisplay.Display(root,mainFrame)
-displayFrame.grid(column=0,row=0)
+displayFrame.grid(column=0,row=0,stick='w')
 
 # Add horizontal line
 ttk.Separator(mainFrame,orient=HORIZONTAL).grid(column=0,row=1,sticky='ew')
 
+# Add Aircraft section
+aircraftFrame = aircraft.Aircraft(root,mainFrame)
+aircraftFrame.grid(column=0,row=2,sticky='w')
+
+# Add horizontal line
+ttk.Separator(mainFrame,orient=HORIZONTAL).grid(column=0,row=3,sticky='ew')
+
 # Create Generate section
 generateFrame = tools.Generate(mainFrame,displayFrame)
-generateFrame.grid(column=0,row=2)
+generateFrame.grid(column=0,row=4)
 
 
 
