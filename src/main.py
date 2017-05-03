@@ -36,7 +36,7 @@ aircraftFrame.grid(column=0,row=2,sticky='w')
 ttk.Separator(mainFrame,orient=HORIZONTAL).grid(column=0,row=3,sticky='ew')
 
 # Create Generate section
-generateFrame = tools.Generate(mainFrame,displayFrame)
+generateFrame = tools.Generate(mainFrame,displayFrame,aircraftFrame)
 generateFrame.grid(column=0,row=4)
 
 

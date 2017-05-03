@@ -112,6 +112,15 @@ class Display(ttk.Frame):
             # Enable entry box
             self.xResEntry.config(state='normal')
             self.yResEntry.config(state='normal')
+
+    def writeConfig(self,f):
+	# Writes the display section of the config to file
+        f.write("# Display Settings\n")
+        f.write("screenID int %i\n" % (self.currMon+1))
+        f.write("xRes int %i\n" % int(self.xResVar.get()))
+        f.write("yRes int %i\n" % int(self.yResVar.get()))
+        f.write("fullscreen bool %i\n" % self.fsCheckVar.get())
+
             
         
 class Monitor:

@@ -21,11 +21,12 @@ def close(event):
 
 
 class Generate(ttk.Frame):   
-    def __init__(self,mainFrame,displayFrame):
+    def __init__(self,mainFrame,displayFrame,aircraftFrame):
         # Create Generate frame
         ttk.Frame.__init__(self,mainFrame,padding="3 3 3 3")
         self.mainFrame = mainFrame
         self.displayFrame = displayFrame
+	self.aircraftFrame = aircraftFrame
         # Create Load Button
         self.loadButton = tk.Button(self,text="Load Config",command=self.on_load_config)
         self.loadButton.grid(column=0,row=0)
@@ -53,11 +54,9 @@ class Generate(ttk.Frame):
         f.write("# Created %s by %s\n" % (time.strftime("%c"),getpass.getuser()))
         f.write("\n")
         # Display Section 
-        f.write("# Display Settings\n")
-        f.write("screenID int %i\n" % (self.displayFrame.currMon+1))
-        f.write("xRes int %i\n" % int(self.displayFrame.xResVar.get()))
-        f.write("yRes int %i\n" % int(self.displayFrame.yResVar.get()))
-        f.write("fullscreen bool %i\n" % self.displayFrame.fsCheckVar.get())
+        self.displayFrame.writeConfig(f)
+	# Aircraft Section
+	self.aircraftFrame.writeAllConfig(f)
         
         # Close file
         f.close()
