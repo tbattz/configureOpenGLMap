@@ -55,3 +55,17 @@ class Aircraft(ttk.Frame):
         # Set Button Label
         self.button.config(text=self.fileLabel)
         
+        
+        
+        
+# TO ADD
+# AIRCRAFT +/- buttons for multiple aircraft
+# Set world origin in lat, lon, alt
+# Skybox folder selection
+# Plot toggle
+# Timing checks - check for new tiles time
+#               - aircraft mavlink delay time
+# Display fps
+# Display telemetry overlay toggle (more options to come, possibly aircraft name overlay)
+# Select terrain data
+        
