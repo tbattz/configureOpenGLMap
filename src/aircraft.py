@@ -128,12 +128,17 @@ class Aircraft(ttk.Frame):
 	
 	if not okay:
 		tkMessageBox.showerror(message="Skipped aircraft row: %i" % (row+1))	
-
+	else:	
+		# Write Data
+		f.write('%s aircraft "%s" %s %s\n' % (self.name[row].get(),self.filename[row],self.ip[row].get(),self.portEntry[row].get()))
+	
 
     def writeAllConfig(self,f):
 	# Writes all aircraft to file
+	f.write("# Aircraft\n")
 	for i in range(0,len(self.name)):
 		self.writeConfig(f,i)
+	f.write("\n")
         
     def checkIP(self,ipStr):
 	# Checks if string is a valid IPV4 address

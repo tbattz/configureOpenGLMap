@@ -120,7 +120,7 @@ class Display(ttk.Frame):
         f.write("xRes int %i\n" % int(self.xResVar.get()))
         f.write("yRes int %i\n" % int(self.yResVar.get()))
         f.write("fullscreen bool %i\n" % self.fsCheckVar.get())
-
+	f.write("\n")
             
         
 class Monitor:
