@@ -113,6 +113,9 @@ class Aircraft(ttk.Frame):
 	if (self.fileLabel[row] == ""):
 		okay = False
 		tkMessageBox.showerror(message="No file selected for aircraft!: Row %i" % (row+1))
+	if (self.fileLabel[row].count(" ")>0):
+		okay = False
+		tkMessageBox.showerror(message="File Path cannot contain spaces!: Row %i" % (row+1))
 	if not self.checkIP(self.ip[row].get()):
 		okay = False
 		tkMessageBox.showerror(message="Invalid IP Address for aircraft!: Row %i" % (row+1))
