@@ -55,7 +55,7 @@ class Aircraft(ttk.Frame):
 	self.fileLabel.append("")
         # Create Socket IP Entry
         self.ip.append(tk.StringVar())
-        self.ipEntry.append(tk.Entry(self,textvariable=self.ip[row],width=10))
+        self.ipEntry.append(tk.Entry(self,textvariable=self.ip[row],width=15))
         self.ipEntry[row].grid(column=2,row=row+1,sticky=tk.W, padx=5)
         # Create Port Entry
         self.port.append(tk.StringVar())
@@ -63,7 +63,7 @@ class Aircraft(ttk.Frame):
         self.portEntry[row].grid(column=3,row=row+1,sticky=tk.W, padx=5)
 	# Set initial values
         self.name[row].set('Aircraft_'+str(row))
-        self.ip[row].set("192.168.1."+str(row))
+        self.ip[row].set("192.168.8."+str(row))
         self.port[row].set(str(14550+row))
 
     def removeRow(self):
@@ -133,7 +133,7 @@ class Aircraft(ttk.Frame):
 		tkMessageBox.showerror(message="Skipped aircraft row: %i" % (row+1))	
 	else:	
 		# Write Data
-		f.write('%s aircraft "%s" %s %s\n' % (self.name[row].get(),self.filename[row],self.ip[row].get(),self.portEntry[row].get()))
+		f.write('%s aircraft %s %s %s\n' % (self.name[row].get(),self.filename[row],self.ip[row].get(),self.portEntry[row].get()))
 	
 
     def writeAllConfig(self,f):
