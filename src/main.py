@@ -9,7 +9,7 @@ from tkinter import ttk
 
 
 
-import mydisplay, tools, aircraft
+import mydisplay, tools, aircraft, volume
 
 # Init Tkinter
 root = Tk()
@@ -35,10 +35,16 @@ aircraftFrame.grid(column=0,row=2,sticky='w')
 # Add horizontal line
 ttk.Separator(mainFrame,orient=HORIZONTAL).grid(column=0,row=3,sticky='ew')
 
+# Create Volumns section
+volumeFrame = volume.Volume(root,mainFrame)
+volumeFrame.grid(column=0,row=4,sticky='w')
+
+# Add horizontal line
+ttk.Separator(mainFrame,orient=HORIZONTAL).grid(column=0,row=5,sticky='ew')
+
 # Create Generate section
 generateFrame = tools.Generate(mainFrame,displayFrame,aircraftFrame)
-generateFrame.grid(column=0,row=4)
-
+generateFrame.grid(column=0,row=6)
 
 
 

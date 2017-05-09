@@ -26,7 +26,7 @@ class Generate(ttk.Frame):
         ttk.Frame.__init__(self,mainFrame,padding="3 3 3 3")
         self.mainFrame = mainFrame
         self.displayFrame = displayFrame
-	self.aircraftFrame = aircraftFrame
+        self.aircraftFrame = aircraftFrame
         # Create Load Button
         self.loadButton = tk.Button(self,text="Load Config",command=self.on_load_config)
         self.loadButton.grid(column=0,row=0)
@@ -55,8 +55,8 @@ class Generate(ttk.Frame):
         f.write("\n")
         # Display Section 
         self.displayFrame.writeConfig(f)
-	# Aircraft Section
-	self.aircraftFrame.writeAllConfig(f)
+        # Aircraft Section
+        self.aircraftFrame.writeAllConfig(f)
         
         # Close file
         f.close()

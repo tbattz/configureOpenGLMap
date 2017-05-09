@@ -20,39 +20,38 @@ class Aircraft(ttk.Frame):
         self.pathLabel = ttk.Label(self, text="Model Path").grid(column=1,row=1, sticky=tk.W, padx=5)
         self.ipLabel = ttk.Label(self, text="Socket IP").grid(column=2,row=1, sticky=tk.W, padx=5)
         self.portLabel = ttk.Label(self, text="Socket Port").grid(column=3,row=1, sticky=tk.W, padx=5)
-	# Create Add/Remove buttons
-	self.addRemoveFrame = tk.Frame(self)
-	self.addRemoveFrame.grid(column=3,row=0)
-	self.addButton = tk.Button(self.addRemoveFrame,bg="green",text="+",command=self.on_add_row)
-	self.addButton.grid(column=0,row=0)
-	self.removeButton = tk.Button(self.addRemoveFrame,bg="red",text="-",command=self.on_remove_row)
-	self.removeButton.grid(column=1,row=0)        
+        # Create Add/Remove buttons
+        self.addRemoveFrame = tk.Frame(self)
+        self.addRemoveFrame.grid(column=3,row=0)
+        self.addButton = tk.Button(self.addRemoveFrame,bg="green",text="+",command=self.on_add_row)
+        self.addButton.grid(column=0,row=0)
+        self.removeButton = tk.Button(self.addRemoveFrame,bg="red",text="-",command=self.on_remove_row)
+        self.removeButton.grid(column=1,row=0)        
         # Create Row(s)
-	self.name = []
-	self.nameEntry = []
-	self.button = []
-	self.filename = []
-	self.fileLabel = []
-	self.ip = []
-	self.ipEntry = []
-	self.port = []
-	self.portEntry = []
-        row=2
-	self.addRow()
+        self.name = []
+        self.nameEntry = []
+        self.button = []
+        self.filename = []
+        self.fileLabel = []
+        self.ip = []
+        self.ipEntry = []
+        self.port = []
+        self.portEntry = []
+        self.addRow()
 
 
     def addRow(self):
-	# Adds a row at the bottom of the current rows
+        # Adds a row at the bottom of the current rows
         # Create Aircraft Name Entry
         self.name.append(tk.StringVar())
-	row = len(self.name)-1
+        row = len(self.name)-1
         self.nameEntry.append(tk.Entry(self,textvariable=self.name[row],width=10))
         self.nameEntry[row].grid(column=0,row=row+1,sticky=tk.W, padx=5)
         # Create Model path selection
         self.button.append(ttk.Button(self, text="Select file", command= lambda: self.loadFile(row)))
         self.button[row].grid(column=1,row=row+1,sticky=tk.W, padx=5)
-	self.filename.append("")
-	self.fileLabel.append("")
+        self.filename.append("")
+        self.fileLabel.append("")
         # Create Socket IP Entry
         self.ip.append(tk.StringVar())
         self.ipEntry.append(tk.Entry(self,textvariable=self.ip[row],width=15))
@@ -61,7 +60,7 @@ class Aircraft(ttk.Frame):
         self.port.append(tk.StringVar())
         self.portEntry.append(tk.Entry(self,textvariable=self.port[row],width=10))
         self.portEntry[row].grid(column=3,row=row+1,sticky=tk.W, padx=5)
-	# Set initial values
+        # Set initial values
         self.name[row].set('Aircraft_'+str(row))
         self.ip[row].set("192.168.8."+str(row))
         self.port[row].set(str(14550+row))
@@ -101,64 +100,64 @@ class Aircraft(ttk.Frame):
         self.addRow()
 
     def on_remove_row(self):
-	self.removeRow()
+	       self.removeRow()
         
     def writeConfig(self,f,row):
-	# Writes single aircraft information to file
-	# Check aircraft	
-	okay = True
-	if (len(self.name[row].get())<1):
-		okay = False
-	 	tkMessageBox.showerror(message="Aircraft name is empty!: Row %i" % (row+1))
-	if (self.fileLabel[row] == ""):
-		okay = False
-		tkMessageBox.showerror(message="No file selected for aircraft!: Row %i" % (row+1))
-	if (self.fileLabel[row].count(" ")>0):
-		okay = False
-		tkMessageBox.showerror(message="File Path cannot contain spaces!: Row %i" % (row+1))
-	if not self.checkIP(self.ip[row].get()):
-		okay = False
-		tkMessageBox.showerror(message="Invalid IP Address for aircraft!: Row %i" % (row+1))
-	port = self.portEntry[row].get()
-	if not port.isdigit():
-		okay = False
-		tkMessageBox.showerror(message="Invalid port number! Aircraft row: %i\nPort number must be from 1024 to 49151." % (row+1))			
-	else:
-		portInt = int(port)
-		if (portInt<1024) or (portInt>49151):
-			okay = False
-			tkMessageBox.showerror(message="Invalid port number! Aircraft row: %i\nPort number must be from 1024 to 49151" % (row+1))
-	
-	if not okay:
-		tkMessageBox.showerror(message="Skipped aircraft row: %i" % (row+1))	
-	else:	
-		# Write Data
-		f.write('%s aircraft %s %s %s\n' % (self.name[row].get(),self.filename[row],self.ip[row].get(),self.portEntry[row].get()))
+    	# Writes single aircraft information to file
+    	# Check aircraft	
+    	okay = True
+    	if (len(self.name[row].get())<1):
+    		okay = False
+    	 	tkMessageBox.showerror(message="Aircraft name is empty!: Row %i" % (row+1))
+    	if (self.fileLabel[row] == ""):
+    		okay = False
+    		tkMessageBox.showerror(message="No file selected for aircraft!: Row %i" % (row+1))
+    	if (self.fileLabel[row].count(" ")>0):
+    		okay = False
+    		tkMessageBox.showerror(message="File Path cannot contain spaces!: Row %i" % (row+1))
+    	if not self.checkIP(self.ip[row].get()):
+    		okay = False
+    		tkMessageBox.showerror(message="Invalid IP Address for aircraft!: Row %i" % (row+1))
+    	port = self.portEntry[row].get()
+    	if not port.isdigit():
+    		okay = False
+    		tkMessageBox.showerror(message="Invalid port number! Aircraft row: %i\nPort number must be from 1024 to 49151." % (row+1))			
+    	else:
+    		portInt = int(port)
+    		if (portInt<1024) or (portInt>49151):
+    			okay = False
+    			tkMessageBox.showerror(message="Invalid port number! Aircraft row: %i\nPort number must be from 1024 to 49151" % (row+1))
+    	
+    	if not okay:
+    		tkMessageBox.showerror(message="Skipped aircraft row: %i" % (row+1))	
+    	else:	
+    		# Write Data
+    		f.write('%s aircraft %s %s %s\n' % (self.name[row].get(),self.filename[row],self.ip[row].get(),self.portEntry[row].get()))
 	
 
     def writeAllConfig(self,f):
-	# Writes all aircraft to file
-	f.write("# Aircraft\n")
-	for i in range(0,len(self.name)):
-		self.writeConfig(f,i)
-	f.write("\n")
+    	# Writes all aircraft to file
+    	f.write("# Aircraft\n")
+    	for i in range(0,len(self.name)):
+    		self.writeConfig(f,i)
+    	f.write("\n")
         
     def checkIP(self,ipStr):
-	# Checks if string is a valid IPV4 address
-	splt = ipStr.split(".")
-	good = True
-	if len(splt) != 4:
-		good = False
-	else:
-		for i in splt:
-			if not i.isdigit():
-				good = False
-			else:
-				j = int(i)
-				if (j < 0) or (j > 255):
-					good = False
-	
-	return good
+    	# Checks if string is a valid IPV4 address
+    	splt = ipStr.split(".")
+    	good = True
+    	if len(splt) != 4:
+    		good = False
+    	else:
+    		for i in splt:
+    			if not i.isdigit():
+    				good = False
+    			else:
+    				j = int(i)
+    				if (j < 0) or (j > 255):
+    					good = False
+    	
+    	return good
 
 # TO ADD
 # AIRCRAFT +/- buttons for multiple aircraft
