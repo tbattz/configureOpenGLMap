@@ -20,6 +20,8 @@ from matplotlib.collections import PatchCollection
 
 from matplotlib.figure import Figure
 
+import math
+
 
 class Volume(ttk.Frame):
     def __init__(self,root,mainFrame):
@@ -82,7 +84,52 @@ class Volume(ttk.Frame):
             pt.set_zorder(2)
             self.axes.draw_artist(pt)
         
-            
+        # Setup callback for click-point adding
+        self.fig.canvas.mpl_connect('button_press_event',self.on_canvas_pressed)
+ 
+    def on_canvas_pressed(self,event):
+        # Check to add or remove new points
+        if (event.inaxes == self.axes):
+            # Check for left/right click
+            if (event.button == 1):
+                # Left Mouse Button
+                # Check if over a point
+                onPoint = False
+                for pt in self.polygon[0].pointList:
+                    contains, attr = pt.contains(event)
+                    if contains:
+                        onPoint = True
+                if not onPoint:
+                    # Get current location
+                    x = event.xdata
+                    y = event.ydata
+                    # Find closest points
+                    d = []
+                    for pt in self.polygon[0].pointList:
+                        d.append(math.sqrt((x-pt.x)**2 + (y-pt.y)**2))
+                    mins = sorted(enumerate(d), key=lambda x:x[1])
+                    if (mins[1][0]>mins[0][0]):
+                        ind = mins[0][0]
+                    else:
+                        ind = mins[0][0]
+                    # Add new point and redaw
+                    self.polygon[0].addNewPoint(DragPoint(self.fig,x,y,colStr='b'),ind)
+            elif (event.button == 3):
+                    # Right mouse button
+                    # Find current point index
+                    if (len(self.polygon[0].pointList)>3):
+                        onPoint = None
+                        for i in range(0,len(self.polygon[0].pointList)):
+                            contains, attr = self.polygon[0].pointList[i].contains(event)
+                            if contains:
+                                onPoint = i
+                        # Remove current point
+                        if (onPoint is not None):
+                            self.polygon[0].removePoint(onPoint)
+                    else:
+                        tkMessageBox.showerror(message='Cannot remove point. Minimum number of points for polygon: 3')
+                
+                
             
 
 class PolyArea(Polygon):
@@ -112,13 +159,39 @@ class PolyArea(Polygon):
             if drgPt != []:
                 self.pts.append([drgPt.x,drgPt.y])
             
-    def addPoint(self,dragPoint):
+    def addNewPoint(self,dragPoint,ind=None):
         # Adds a drag point to the polygon
-        self.pointList.append(dragPoint)
-        self.ptsFromDragPointList()
-        if self.polyCreated:
-            # Update x,y points
-            self.set_xy(self.pts)
+        if ind==None:
+            self.pointList.append(dragPoint)
+            self.pointList[-1].masterPoly = self
+        else:
+            self.pointList.insert(ind,dragPoint)
+            self.pointList[ind].masterPoly = self
+            
+        # Redraw
+        self.reDrawPolyPoints()
+        
+    def removePoint(self,ind):
+        # Removes a point given the index in self.pointList
+        self.pointList[ind].remove()
+        del self.pointList[ind]
+        # Redraw
+        self.reDrawPolyPoints()
+            
+    def reDrawPolyPoints(self):
+        # Redraw Polygon
+        self.updatePoints() 
+        # Put old background back
+        self.background = self.figure.canvas.copy_from_bbox(self.axes.bbox)
+        self.figure.canvas.restore_region(self.background)
+        self.axes.draw_artist(self)
+        # Redraw all points
+        for pt in self.pointList:
+                pt.axes.draw_artist(pt)
+        # Blit area
+        self.figure.canvas.blit(self.axes.bbox)
+        self.figure.canvas.draw()
+
         
     def updatePoints(self):
         # Reparses the DragPoints and updates the polygon
@@ -143,11 +216,6 @@ class DragPoint(patches.Ellipse):
         self.background = self.figure.canvas.copy_from_bbox(self.axes.bbox)
         self.connect()
         
-    def add2Polygon(self,polygon):
-        # Adds the point to a polygon
-        self.masterPoly = polygon
-        self.masterPoly.addPoint(self)
-    
     def connect(self):
         # Connects to the required events
         self.cidpress = self.figure.canvas.mpl_connect('button_press_event',self.on_pressed)
@@ -194,7 +262,6 @@ class DragPoint(patches.Ellipse):
                 # Redraw all points
                 if self.masterPoly is not None:
                     for pt in self.masterPoly.pointList:
-                        print pt
                         pt.axes.draw_artist(pt)
                 self.axes.draw_artist(self)
                 # Move stored point position
