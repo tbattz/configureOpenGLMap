@@ -88,6 +88,7 @@ class Volume(ttk.Frame):
         # Load Map
         #self.plotMapTile()
         imagePath = "../../SatTiles/18-236831-160989.png"
+        self.zoom = 18
         self.mapTiles = []
         self.mapTiles.append(MapTile(imagePath,self.axes,0.0,0.5,0.5,1.0,1))
         self.mapTiles.append(MapTile(imagePath,self.axes,0.0,0.0,0.5,0.5,1))
@@ -95,7 +96,7 @@ class Volume(ttk.Frame):
         self.mapTiles.append(MapTile(imagePath,self.axes,0.5,0.5,1.0,1.0,1))
         # Download test
         imagePath = "../../SateTiles-18-0-0.png"
-        self.mapTiles.append(MapTile(imagePath,self.axes,0.25,0.75,0.25,0.75,18))
+        self.mapTiles.append(MapTile(imagePath,self.axes,0.25,0.75,0.25,0.75,self.zoom))
         
         # Create Points
         self.points = []
@@ -152,6 +153,9 @@ class Volume(ttk.Frame):
         elif (event.key == '+'):
             self.axes.set_xlim(xlim[0]+xdiff,xlim[1]-xdiff)
             self.axes.set_ylim(ylim[0]+ydiff,ylim[1]-ydiff)
+        
+        # Check Tiles
+        self.checkRequiredTiles()
             
         # Redraw
         self.polygon[0].reDrawPolyPoints()
@@ -168,6 +172,9 @@ class Volume(ttk.Frame):
         elif (event.button == 'down'):
             self.axes.set_xlim(xlim[0]-xdiff,xlim[1]+xdiff)
             self.axes.set_ylim(ylim[0]-ydiff,ylim[1]+ydiff)
+        
+        # Check Tiles
+        self.checkRequiredTiles()
         
         # Redraw
         self.polygon[0].reDrawPolyPoints()
@@ -206,7 +213,17 @@ class Volume(ttk.Frame):
                     else:
                         tkMessageBox.showerror(message='Cannot remove point. Minimum number of points for polygon: 3')
     
-    
+    def checkRequiredTiles(self):
+        # Checks if the required tiles are loaded, if not, loads them
+        xlim = self.axes.get_xlim()
+        ylim = self.axes.get_ylim()
+        # Lower bounds
+        [x1,y1] = latLon2TileNum(ylim[0], xlim[0], self.zoom)
+        [x2,y2] = latLon2TileNum(ylim[1], xlim[1], self.zoom)
+        x = range(int(x1),int(x2))
+        y = range(int(y2),int(y2))
+        print x
+        print y
     
         
 class MapTile():
