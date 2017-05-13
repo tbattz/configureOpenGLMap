@@ -103,17 +103,9 @@ class Volume(ttk.Frame):
                     # Get current location
                     x = event.xdata
                     y = event.ydata
-                    # Find closest points
-                    d = []
-                    for pt in self.polygon[0].pointList:
-                        d.append(math.sqrt((x-pt.x)**2 + (y-pt.y)**2))
-                    mins = sorted(enumerate(d), key=lambda x:x[1])
-                    if (mins[1][0]>mins[0][0]):
-                        ind = mins[0][0]
-                    else:
-                        ind = mins[0][0]
                     # Add new point and redaw
-                    self.polygon[0].addNewPoint(DragPoint(self.fig,x,y,colStr='b'),ind)
+                    self.polygon[0].addNewPoint(DragPoint(self.fig,x,y,colStr='b'))
+
             elif (event.button == 3):
                     # Right mouse button
                     # Find current point index
@@ -130,7 +122,7 @@ class Volume(ttk.Frame):
                         tkMessageBox.showerror(message='Cannot remove point. Minimum number of points for polygon: 3')
                 
                 
-            
+
 
 class PolyArea(Polygon):
     # The polygon defining an area on the map
@@ -159,14 +151,12 @@ class PolyArea(Polygon):
             if drgPt != []:
                 self.pts.append([drgPt.x,drgPt.y])
             
-    def addNewPoint(self,dragPoint,ind=None):
+    def addNewPoint(self,dragPoint):
         # Adds a drag point to the polygon
-        if ind==None:
-            self.pointList.append(dragPoint)
-            self.pointList[-1].masterPoly = self
-        else:
-            self.pointList.insert(ind,dragPoint)
-            self.pointList[ind].masterPoly = self
+        self.pointList.append(dragPoint)
+        self.pointList[-1].masterPoly = self
+        # Sort points to create non-intersecting polygon
+        self.resortPts()
             
         # Redraw
         self.reDrawPolyPoints()
@@ -197,7 +187,32 @@ class PolyArea(Polygon):
         # Reparses the DragPoints and updates the polygon
         self.ptsFromDragPointList()
         self.set_xy(self.pts)
-            
+
+    def resortPts(self):
+        # Resorts points to create a non-intersecting polygon
+        # Calculate center
+        center = [sum([pt.x for pt in self.pointList])/len(self.pointList),sum([pt.y for pt in self.pointList])/len(self.pointList)]
+        # Use polar angle to sort points
+        angle = []
+        for pt in self.pointList:
+            angle.append(math.atan2(pt.y-center[1],pt.x-center[0]))
+        sortedInd = sorted(enumerate(angle), key=lambda x:x[1])
+        # Reorder 
+        oldPts = self.pointList
+        self.pointList = []
+        for i in range(0,len(oldPts)):
+            self.pointList.append(oldPts[sortedInd[i][0]])
+        
+
+    def calcAngle(self,x1,y1,x2,y2,x3,y3):
+        # Calculates the angle between the lines joining pt3 to the other two points.
+        # Calculate distances
+        a = math.sqrt((x2-x3)**2 + (y2-y3)**2)
+        b = math.sqrt((x1-x3)**2 + (y1-y3)**2)
+        c = math.sqrt((x1-x2)**2 + (y1-y2)**2)
+        # Apply cosine rule
+        C = math.acos((a**2 + b**2 - c**2)/(2*a*b))
+        return C 
 
 class DragPoint(patches.Ellipse):
     # Create lock that only one instance can hold at a time
@@ -254,6 +269,11 @@ class DragPoint(patches.Ellipse):
                 self.center = (self.center[0]+dx,self.center[1]+dy)
                 # Put old background back
                 self.figure.canvas.restore_region(self.background)
+                # Move stored point position
+                self.x = self.center[0]
+                self.y = self.center[1]
+                # Resort points
+                self.masterPoly.resortPts()
                 # Redraw Polygon
                 if self.masterPoly is not None:
                     self.masterPoly.updatePoints() 
@@ -264,9 +284,6 @@ class DragPoint(patches.Ellipse):
                     for pt in self.masterPoly.pointList:
                         pt.axes.draw_artist(pt)
                 self.axes.draw_artist(self)
-                # Move stored point position
-                self.x = self.center[0]
-                self.y = self.center[1]
                 # Blit area
                 self.figure.canvas.blit(self.axes.bbox)
     
