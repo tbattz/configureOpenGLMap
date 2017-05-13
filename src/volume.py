@@ -23,7 +23,28 @@ from matplotlib.figure import Figure
 from scipy.misc import imread
 import matplotlib.cbook as cbook
 
-import math
+import os, math
+
+from threading import Thread
+import urllib
+
+
+def latLon2TileNum(lat, lon, zoom):
+    # Converts a lat and lon to tile number
+    lat_rad = math.radians(lat)
+    n = math.pow(2, zoom)
+    x = n * (lon + 180.0) / 360.0
+    y = n * (1 - (math.log(math.tan(lat_rad) + 1.0/math.cos(lat_rad)) / math.pi)) / 2.0
+    
+    return [x,y]
+            
+def tileNum2LatLon(x, y, zoom):
+    # Convert tile number to lat, lon
+    n = math.pow(2,zoom)
+    lat = math.atan(math.sinh(math.pi - (y*2*math.pi/n)))*180.0/math.pi
+    lon = (x/n)*360.0 - 180.0
+    
+    return [lat,lon]
 
 
 class Volume(ttk.Frame):
@@ -41,6 +62,7 @@ class Volume(ttk.Frame):
         self.removeButton.grid(column=1,row=0)        
         # Create Figure
         self.createFigure(root)
+        
 
     def on_add_row(self):
         # Adds a row at the bottom of the current rows
@@ -60,6 +82,9 @@ class Volume(ttk.Frame):
         plt.subplots_adjust(left=0.0,right=1.0,bottom=0.0,top=1.0)
         self.canvas = FigureCanvasTkAgg(self.fig, master=self)
         
+        # Move Map Callbacks
+        self.cid = self.fig.canvas.mpl_connect('key_press_event',self.on_key_pressed)
+        
         # Load Map
         #self.plotMapTile()
         imagePath = "../../SatTiles/18-236831-160989.png"
@@ -68,6 +93,9 @@ class Volume(ttk.Frame):
         self.mapTiles.append(MapTile(imagePath,self.axes,0.0,0.0,0.5,0.5,1))
         self.mapTiles.append(MapTile(imagePath,self.axes,0.5,0.0,1.0,0.5,1))
         self.mapTiles.append(MapTile(imagePath,self.axes,0.5,0.5,1.0,1.0,1))
+        # Download test
+        imagePath = "../../SateTiles-18-0-0.png"
+        self.mapTiles.append(MapTile(imagePath,self.axes,0.25,0.75,0.25,0.75,18))
         
         # Create Points
         self.points = []
@@ -102,6 +130,47 @@ class Volume(ttk.Frame):
         
         # Setup callback for click-point adding
         self.fig.canvas.mpl_connect('button_press_event',self.on_canvas_pressed)
+        self.fig.canvas.mpl_connect('scroll_event',self.on_scroll_wheel)
+ 
+    def on_key_pressed(self,event):
+        # Change axes limits
+        xlim = self.axes.get_xlim()
+        ylim = self.axes.get_ylim()
+        xdiff = (xlim[1]-xlim[0])/8.0
+        ydiff = (ylim[1]-ylim[0])/8.0
+        if (event.key == 'left'):
+            self.axes.set_xlim(xlim-xdiff)
+        elif (event.key == 'right'):
+            self.axes.set_xlim(xlim+xdiff)
+        elif (event.key == 'up'):
+            self.axes.set_ylim(ylim+ydiff)
+        elif (event.key == 'down'):
+            self.axes.set_ylim(ylim-ydiff)
+        elif (event.key == '-'):
+            self.axes.set_xlim(xlim[0]-xdiff,xlim[1]+xdiff)
+            self.axes.set_ylim(ylim[0]-ydiff,ylim[1]+ydiff)
+        elif (event.key == '+'):
+            self.axes.set_xlim(xlim[0]+xdiff,xlim[1]-xdiff)
+            self.axes.set_ylim(ylim[0]+ydiff,ylim[1]-ydiff)
+            
+        # Redraw
+        self.polygon[0].reDrawPolyPoints()
+            
+    def on_scroll_wheel(self,event):
+        # Change axes zoom level
+        xlim = self.axes.get_xlim()
+        ylim = self.axes.get_ylim()
+        xdiff = (xlim[1]-xlim[0])/8.0
+        ydiff = (ylim[1]-ylim[0])/8.0
+        if (event.button == 'up'):
+            self.axes.set_xlim(xlim[0]+xdiff,xlim[1]-xdiff)
+            self.axes.set_ylim(ylim[0]+ydiff,ylim[1]-ydiff)
+        elif (event.button == 'down'):
+            self.axes.set_xlim(xlim[0]-xdiff,xlim[1]+xdiff)
+            self.axes.set_ylim(ylim[0]-ydiff,ylim[1]+ydiff)
+        
+        # Redraw
+        self.polygon[0].reDrawPolyPoints()
  
     def on_canvas_pressed(self,event):
         # Check to add or remove new points
@@ -136,14 +205,10 @@ class Volume(ttk.Frame):
                             self.polygon[0].removePoint(onPoint)
                     else:
                         tkMessageBox.showerror(message='Cannot remove point. Minimum number of points for polygon: 3')
-                
-    def plotMapTile(self):
-        # Plots a map tile on the plot
-        path = "../../SatTiles/18-236831-160989.png"
+    
+    
+    
         
-        img = plt.imread(path)
-        self.axes.imshow(img,zorder=0,extent=[0.25,1.0,0.25,1.0],aspect='auto')
-
 class MapTile():
     # The image for a map tile
     def __init__(self,imagePath,axes,latTL,lonTL,latBR,lonBR,zoom):
@@ -157,14 +222,26 @@ class MapTile():
         
         self.extents = [0.0,1.0,0.0,1.0]
         
+        [x,y] = latLon2TileNum(self.latTL, self.lonTL, self.zoom)
+        self.x = x
+        self.y = y
+        
+        
         # Calculate initial extents
         self.calcExtents()
         
         # Load image data
-        self.img = plt.imread(self.imagePath)
+        if os.path.isfile(self.imagePath):
+            self.img = plt.imread(self.imagePath)
+            # Plot Tile
+            self.axes.imshow(self.img,zorder=0,extent=self.extents,aspect='auto')
+        else:
+            # Launch thread to download tile
+            thread = Thread(target=self.downloadTile,args=())
+            thread.start()
+            print 2
         
-        # Plot Tile
-        self.axes.imshow(self.img,zorder=0,extent=self.extents,aspect='auto')
+
         
     def calcExtents(self):
         # Calculates the extent for the current window
@@ -175,10 +252,18 @@ class MapTile():
         eyL = (self.lonTL-ylim[0])/(ylim[1]-ylim[0])
         eyR = (self.lonBR-ylim[0])/(ylim[1]-ylim[0])
         self.extents = [exL,exR,eyL,eyR]
-        print self.extents
         # Reset axes limits
         self.axes.set_xlim(xlim)
         self.axes.set_ylim(ylim)
+        
+    def downloadTile(self):
+        # Function to download a tile 
+        url = "http://maptile.maps.svc.ovi.com/maptiler/v2/maptile/newest/hybrid.day/%i/%i/%i/256/png8" % (self.zoom,math.floor(self.x),math.floor(self.y))
+        print url+'\n'
+        filename = "../../SatTiles/%i-%i-%i.png" % (self.zoom,math.floor(self.x),math.floor(self.y))
+        urllib.urlretrieve(url, filename)
+        print "done."
+        
         
 
 class PolyArea(Polygon):
