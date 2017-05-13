@@ -196,7 +196,7 @@ class PolyArea(Polygon):
             pt.masterPoly = self
             
         # Initialise polygon
-        Polygon.__init__(self,self.pts,closed=True)
+        Polygon.__init__(self,self.pts,alpha=0.5,closed=True)
         
         # Add poly to axes
         self.fig.axes[0].add_patch(self)
@@ -235,8 +235,7 @@ class PolyArea(Polygon):
         # Redraw all points
         for pt in self.pointList:
                 pt.axes.draw_artist(pt)
-        # Blit area
-        self.figure.canvas.blit(self.axes.bbox)
+        # Redraw Canvas
         self.figure.canvas.draw()
 
         
@@ -341,8 +340,7 @@ class DragPoint(patches.Ellipse):
                     for pt in self.masterPoly.pointList:
                         pt.axes.draw_artist(pt)
                 self.axes.draw_artist(self)
-                # Blit area
-                self.figure.canvas.blit(self.axes.bbox)
+
     
     def disconnect(self):
         self.figure.canvas.mpl_disconnect(self.cidpress)
