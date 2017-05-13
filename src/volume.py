@@ -20,6 +20,9 @@ from matplotlib.collections import PatchCollection
 
 from matplotlib.figure import Figure
 
+from scipy.misc import imread
+import matplotlib.cbook as cbook
+
 import math
 
 
@@ -57,11 +60,24 @@ class Volume(ttk.Frame):
         plt.subplots_adjust(left=0.0,right=1.0,bottom=0.0,top=1.0)
         self.canvas = FigureCanvasTkAgg(self.fig, master=self)
         
+        # Load Map
+        #self.plotMapTile()
+        imagePath = "../../SatTiles/18-236831-160989.png"
+        self.mapTiles = []
+        self.mapTiles.append(MapTile(imagePath,self.axes,0.0,0.5,0.5,1.0,1))
+        self.mapTiles.append(MapTile(imagePath,self.axes,0.0,0.0,0.5,0.5,1))
+        self.mapTiles.append(MapTile(imagePath,self.axes,0.5,0.0,1.0,0.5,1))
+        self.mapTiles.append(MapTile(imagePath,self.axes,0.5,0.5,1.0,1.0,1))
+        
         # Create Points
         self.points = []
         self.points.append(DragPoint(self.fig,0.5,0.5,colStr='b'))
         self.points.append(DragPoint(self.fig,0.75,0.75,colStr='b'))
         self.points.append(DragPoint(self.fig,1.0,0.0,colStr='b'))
+        
+        self.axes.set_xlim(0,1)
+        self.axes.set_ylim(0,1)
+        
          
         # Create Polygon
         self.polygon = [PolyArea(self.fig, self.points, colStr='b')]
@@ -121,8 +137,49 @@ class Volume(ttk.Frame):
                     else:
                         tkMessageBox.showerror(message='Cannot remove point. Minimum number of points for polygon: 3')
                 
-                
+    def plotMapTile(self):
+        # Plots a map tile on the plot
+        path = "../../SatTiles/18-236831-160989.png"
+        
+        img = plt.imread(path)
+        self.axes.imshow(img,zorder=0,extent=[0.25,1.0,0.25,1.0],aspect='auto')
 
+class MapTile():
+    # The image for a map tile
+    def __init__(self,imagePath,axes,latTL,lonTL,latBR,lonBR,zoom):
+        self.imagePath = imagePath
+        self.axes = axes
+        self.latTL = latTL
+        self.lonTL = lonTL
+        self.latBR = latBR
+        self.lonBR = lonBR
+        self.zoom = zoom
+        
+        self.extents = [0.0,1.0,0.0,1.0]
+        
+        # Calculate initial extents
+        self.calcExtents()
+        
+        # Load image data
+        self.img = plt.imread(self.imagePath)
+        
+        # Plot Tile
+        self.axes.imshow(self.img,zorder=0,extent=self.extents,aspect='auto')
+        
+    def calcExtents(self):
+        # Calculates the extent for the current window
+        xlim = self.axes.get_xlim()
+        ylim = self.axes.get_ylim()
+        exL = (self.latTL-xlim[0])/(xlim[1]-xlim[0])
+        exR = (self.latBR-xlim[0])/(xlim[1]-xlim[0])
+        eyL = (self.lonTL-ylim[0])/(ylim[1]-ylim[0])
+        eyR = (self.lonBR-ylim[0])/(ylim[1]-ylim[0])
+        self.extents = [exL,exR,eyL,eyR]
+        print self.extents
+        # Reset axes limits
+        self.axes.set_xlim(xlim)
+        self.axes.set_ylim(ylim)
+        
 
 class PolyArea(Polygon):
     # The polygon defining an area on the map
