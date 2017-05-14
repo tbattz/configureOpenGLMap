@@ -95,9 +95,9 @@ class Volume(ttk.Frame):
         origin = [lat, lon, alt, head]
         print origin
         
-        # Load Map
-        #self.plotMapTile()
-        imagePath = "../../SatTiles/18-236831-160989.png"
+        self.axes.set_xlim(origin[1]-0.0025,origin[1]+0.0025)
+        self.axes.set_ylim(origin[0]-0.0025,origin[0]+0.0025)
+        
         self.zoom = 18
         self.mapTiles = []
         #self.mapTiles.append(MapTile(imagePath,self.axes,0.0,0.5,0.5,1.0,1))
@@ -105,17 +105,22 @@ class Volume(ttk.Frame):
         #self.mapTiles.append(MapTile(imagePath,self.axes,0.5,0.0,1.0,0.5,1))
         #self.mapTiles.append(MapTile(imagePath,self.axes,0.5,0.5,1.0,1.0,1))
         # Download test
-        imagePath = "../../SateTiles-18-0-0.png"
-        self.mapTiles.append(MapTile(imagePath,self.axes,0.25,0.75,0.25,0.75,self.zoom))
+        imageFolder = "../../SatTiles/"
+        self.mapTiles.append(MapTile(imageFolder,self.axes,236831,160989,self.zoom))
+        self.mapTiles.append(MapTile(imageFolder,self.axes,236832,160989,self.zoom))
+        self.mapTiles.append(MapTile(imageFolder,self.axes,236832,160990,self.zoom))
+        self.mapTiles.append(MapTile(imageFolder,self.axes,236831,160990,self.zoom))
+        self.mapTiles.append(MapTile(imageFolder,self.axes,236831,160991,self.zoom))
+        self.mapTiles.append(MapTile(imageFolder,self.axes,236832,160991,self.zoom))
+        self.mapTiles.append(MapTile(imageFolder,self.axes,236833,160990,self.zoom))
         
         # Create Points
         self.points = []
-        self.points.append(DragPoint(self.fig,origin[1]-0.05,origin[0]-0.05,colStr='b'))
-        self.points.append(DragPoint(self.fig,origin[1]+0.05,origin[0]+0.05,colStr='b'))
-        self.points.append(DragPoint(self.fig,origin[1]+0.05,origin[0]-0.05,colStr='b'))
+        self.points.append(DragPoint(self.fig,origin[1]-0.0005,origin[0]-0.0005,colStr='b'))
+        self.points.append(DragPoint(self.fig,origin[1]+0.0005,origin[0]+0.0005,colStr='b'))
+        self.points.append(DragPoint(self.fig,origin[1]+0.0005,origin[0]-0.0005,colStr='b'))
         
-        self.axes.set_xlim(origin[1]-0.1,origin[1]+0.1)
-        self.axes.set_ylim(origin[0]-0.1,origin[0]+0.1)
+
         
          
         # Create Polygon
@@ -265,47 +270,39 @@ class Volume(ttk.Frame):
         
 class MapTile():
     # The image for a map tile
-    def __init__(self,imagePath,axes,latTL,lonTL,latBR,lonBR,zoom):
-        self.imagePath = imagePath
+    def __init__(self,imageFolder,axes,x,y,zoom):
+        self.imageFolder = imageFolder      # Requires trailing slash
         self.axes = axes
-        self.latTL = latTL
-        self.lonTL = lonTL
-        self.latBR = latBR
-        self.lonBR = lonBR
-        self.zoom = zoom
-        
-        self.extents = [0.0,1.0,0.0,1.0]
-        
-        [x,y] = latLon2TileNum(self.latTL, self.lonTL, self.zoom)
         self.x = x
         self.y = y
-        
-        
-        # Calculate initial extents
-        self.calcExtents()
+        self.zoom = zoom
+        self.imagePath = "%s%i-%i-%i.png" % (self.imageFolder,self.zoom,self.x,self.y)
+        self.loaded = False
+        # Calculate Top Left and Bottom Right lat, lons
+        [self.latTL, self.lonTL] = tileNum2LatLon(self.x, self.y, self.zoom)
+        [self.latBR, self.lonBR] = tileNum2LatLon(self.x+1, self.y+1, self.zoom)
         
         # Load image data
         if os.path.isfile(self.imagePath):
-            self.img = plt.imread(self.imagePath)
-            # Plot Tile
-            self.axes.imshow(self.img,zorder=0,extent=self.extents,aspect='auto')
+            self.showTile()
+            self.loaded = True
+            print self.extents
         else:
             # Launch thread to download tile
             thread = Thread(target=self.downloadTile,args=())
             thread.start()
-            print 2
+            self.loaded = False
         
 
         
-    def calcExtents(self):
+    def showTile(self):
         # Calculates the extent for the current window
         xlim = self.axes.get_xlim()
         ylim = self.axes.get_ylim()
-        exL = (self.latTL-xlim[0])/(xlim[1]-xlim[0])
-        exR = (self.latBR-xlim[0])/(xlim[1]-xlim[0])
-        eyL = (self.lonTL-ylim[0])/(ylim[1]-ylim[0])
-        eyR = (self.lonBR-ylim[0])/(ylim[1]-ylim[0])
-        self.extents = [exL,exR,eyL,eyR]
+        self.extents = [self.lonTL,self.lonBR,self.latBR,self.latTL]
+        # Plot Tile
+        self.img = plt.imread(self.imagePath)
+        self.axes.imshow(self.img,zorder=0,extent=self.extents,aspect='auto')
         # Reset axes limits
         self.axes.set_xlim(xlim)
         self.axes.set_ylim(ylim)
@@ -414,7 +411,7 @@ class DragPoint(patches.Ellipse):
     lock = None
     # A point that can be dragged with the mouse
     def __init__(self,fig,x,y,colStr='b',masterPolygon=None):
-        patches.Ellipse.__init__(self,(x,y),0.03,0.03,fc=colStr,alpha=0.75,edgecolor='k')
+        patches.Ellipse.__init__(self,(x,y),0.00015,0.00015,fc=colStr,alpha=0.75,edgecolor='k')
         self.fig = fig
         self.x = x
         self.y = y
