@@ -23,7 +23,7 @@ from matplotlib.figure import Figure
 from scipy.misc import imread
 import matplotlib.cbook as cbook
 
-import os, math
+import os, math, time
 
 from threading import Thread
 import urllib
@@ -61,10 +61,15 @@ class Volume(ttk.Frame):
         self.addButton = tk.Button(self.addRemoveFrame,bg="green",text="+",command=self.on_add_row)
         self.addButton.grid(column=0,row=0)
         self.removeButton = tk.Button(self.addRemoveFrame,bg="red",text="-",command=self.on_remove_row)
-        self.removeButton.grid(column=1,row=0)        
+        self.removeButton.grid(column=1,row=0)
+                
         # Create Figure
         self.createFigure(root)
         
+    def close(self,event):
+        # On Close window, stop thread
+        self.downloadRunning = False
+        self.thread.join()
 
     def on_add_row(self):
         # Adds a row at the bottom of the current rows
@@ -92,33 +97,42 @@ class Volume(ttk.Frame):
         lon = float(self.originFrame.lonVar.get())
         alt = float(self.originFrame.altVar.get())
         head = float(self.originFrame.headVar.get())
-        origin = [lat, lon, alt, head]
-        print origin
+        self.origin = [lat, lon, alt, head]
         
-        self.axes.set_xlim(origin[1]-0.0025,origin[1]+0.0025)
-        self.axes.set_ylim(origin[0]-0.0025,origin[0]+0.0025)
-        
+        # Set Axes Limits
+        self.axes.set_xlim(self.origin[1]-0.0025,self.origin[1]+0.0025)
+        self.axes.set_ylim(self.origin[0]-0.0025,self.origin[0]+0.0025)
+
+        # Setup Maps 
         self.zoom = 18
         self.mapTiles = []
-        #self.mapTiles.append(MapTile(imagePath,self.axes,0.0,0.5,0.5,1.0,1))
-        #self.mapTiles.append(MapTile(imagePath,self.axes,0.0,0.0,0.5,0.5,1))
-        #self.mapTiles.append(MapTile(imagePath,self.axes,0.5,0.0,1.0,0.5,1))
-        #self.mapTiles.append(MapTile(imagePath,self.axes,0.5,0.5,1.0,1.0,1))
-        # Download test
-        imageFolder = "../../SatTiles/"
-        self.mapTiles.append(MapTile(imageFolder,self.axes,236831,160989,self.zoom))
-        self.mapTiles.append(MapTile(imageFolder,self.axes,236832,160989,self.zoom))
-        self.mapTiles.append(MapTile(imageFolder,self.axes,236832,160990,self.zoom))
-        self.mapTiles.append(MapTile(imageFolder,self.axes,236831,160990,self.zoom))
-        self.mapTiles.append(MapTile(imageFolder,self.axes,236831,160991,self.zoom))
-        self.mapTiles.append(MapTile(imageFolder,self.axes,236832,160991,self.zoom))
-        self.mapTiles.append(MapTile(imageFolder,self.axes,236833,160990,self.zoom))
+        self.loadedTiles = []
+        self.downloadQueue = []
+        self.downloadSwitch = False
+        self.imageFolder = "../../SatTiles/"
+        
+        # Load required tiles
+        self.checkRequiredTiles()
+        
+        # Download tiles thread
+        self.thread = Thread(target=self.downloadTiles,args=())
+        self.thread.start()
+        
+        
+        
+        self.mapTiles.append(MapTile(self,self.imageFolder,self.axes,236831,160989,self.zoom))
+        self.mapTiles.append(MapTile(self,self.imageFolder,self.axes,236832,160989,self.zoom))
+        self.mapTiles.append(MapTile(self,self.imageFolder,self.axes,236832,160990,self.zoom))
+        self.mapTiles.append(MapTile(self,self.imageFolder,self.axes,236831,160990,self.zoom))
+        self.mapTiles.append(MapTile(self,self.imageFolder,self.axes,236831,160991,self.zoom))
+        self.mapTiles.append(MapTile(self,self.imageFolder,self.axes,236832,160991,self.zoom))
+        self.mapTiles.append(MapTile(self,self.imageFolder,self.axes,236833,160990,self.zoom))
         
         # Create Points
         self.points = []
-        self.points.append(DragPoint(self.fig,origin[1]-0.0005,origin[0]-0.0005,colStr='b'))
-        self.points.append(DragPoint(self.fig,origin[1]+0.0005,origin[0]+0.0005,colStr='b'))
-        self.points.append(DragPoint(self.fig,origin[1]+0.0005,origin[0]-0.0005,colStr='b'))
+        self.points.append(DragPoint(self.fig,self.origin[1]-0.0005,self.origin[0]-0.0005,colStr='b'))
+        self.points.append(DragPoint(self.fig,self.origin[1]+0.0005,self.origin[0]+0.0005,colStr='b'))
+        self.points.append(DragPoint(self.fig,self.origin[1]+0.0005,self.origin[0]-0.0005,colStr='b'))
         
 
         
@@ -147,8 +161,14 @@ class Volume(ttk.Frame):
         # Setup callback for click-point adding
         self.fig.canvas.mpl_connect('button_press_event',self.on_canvas_pressed)
         self.fig.canvas.mpl_connect('scroll_event',self.on_scroll_wheel)
+        
+       # Close on Escape
+        self.bind('<Escape>',self.close)
  
     def on_key_pressed(self,event):
+        # Clear Download Queue
+        self.downloadQueue = []
+        self.downloadSwitch = True
         # Change axes limits
         xlim = self.axes.get_xlim()
         ylim = self.axes.get_ylim()
@@ -179,6 +199,9 @@ class Volume(ttk.Frame):
         self.polygon[0].reDrawPolyPoints()
             
     def on_scroll_wheel(self,event):
+        # Clear Download Queue
+        self.downloadQueue = []
+        self.downloadSwitch = True
         # Change axes zoom level
         xlim = self.axes.get_xlim()
         ylim = self.axes.get_ylim()
@@ -253,6 +276,31 @@ class Volume(ttk.Frame):
                     else:
                         tkMessageBox.showerror(message='Cannot remove point. Minimum number of points for polygon: 3')
     
+    def downloadTiles(self):
+        # Function to be threaded to download tiles
+        self.downloadRunning = True
+        while self.downloadRunning:
+            for tile in reversed(self.downloadQueue):
+                if not self.downloadSwitch:
+                    if tile not in self.loadedTiles:
+                        # Download tile
+                        mapTile = MapTile(self,self.imageFolder,self.axes,tile[0],tile[1],tile[2])
+                        mapTile.downloadTile()
+                        self.loadedTiles.append(tile)
+                        self.mapTiles.append(mapTile)
+                        if tile in self.downloadQueue:
+                            self.downloadQueue.remove(tile)
+                            
+                        # Redraw Canvas
+                        self.fig.canvas.draw()
+                else:            
+                    print 'abort'
+                    self.downloadSwitch = False
+                
+                
+            time.sleep(0.5)
+        
+    
     def checkRequiredTiles(self):
         # Checks if the required tiles are loaded, if not, loads them
         xlim = self.axes.get_xlim()
@@ -260,22 +308,40 @@ class Volume(ttk.Frame):
         # Lower bounds
         [x1,y1] = latLon2TileNum(ylim[0], xlim[0], self.zoom)
         [x2,y2] = latLon2TileNum(ylim[1], xlim[1], self.zoom)
-        xmin = min(x1,x2)
-        xmax = max(x1,x2)
-        ymin = min(y1,y2)
-        ymax = max(y1,y2)
-        x = range(int(xmin),int(xmax))
-        y = range(int(ymin),int(ymax))
+        xmin = int(math.floor(min(x1,x2)))
+        xmax = int(math.ceil(max(x1,x2)))
+        ymin = int(math.floor(min(y1,y2)))
+        ymax = int(math.ceil(max(y1,y2)))
+        x = range(xmin,xmax)
+        y = range(ymin,ymax)
+        # Load required tiles if they are on disk and not yet loaded
+        for i in x:
+            for j in y:
+                # Check if already loaded or downloaded
+                if (i,j,self.zoom) not in self.downloadQueue:
+                    if (i,j,self.zoom) not in self.loadedTiles:
+                        # If file exists, load it
+                        imagePath = "%s%i-%i-%i.png" % (self.imageFolder,self.zoom,i,j)
+                        if os.path.isfile(imagePath):
+                            # Load tile
+                            self.loadedTiles.append((i,j,self.zoom))
+                            self.mapTiles.append(MapTile(self,self.imageFolder,self.axes,i,j,self.zoom))
+                        else:
+                            if (i,j,self.zoom) not in self.downloadQueue:
+                                self.downloadQueue.append((i,j,self.zoom))             
+    
     
         
 class MapTile():
     # The image for a map tile
-    def __init__(self,imageFolder,axes,x,y,zoom):
+    def __init__(self,master,imageFolder,axes,x,y,zoom):
+        self.master = master
         self.imageFolder = imageFolder      # Requires trailing slash
         self.axes = axes
         self.x = x
         self.y = y
         self.zoom = zoom
+        self.tileID = (self.x,self.y,self.zoom)
         self.imagePath = "%s%i-%i-%i.png" % (self.imageFolder,self.zoom,self.x,self.y)
         self.loaded = False
         # Calculate Top Left and Bottom Right lat, lons
@@ -286,14 +352,8 @@ class MapTile():
         if os.path.isfile(self.imagePath):
             self.showTile()
             self.loaded = True
-            print self.extents
         else:
-            # Launch thread to download tile
-            thread = Thread(target=self.downloadTile,args=())
-            thread.start()
             self.loaded = False
-        
-
         
     def showTile(self):
         # Calculates the extent for the current window
@@ -310,11 +370,12 @@ class MapTile():
     def downloadTile(self):
         # Function to download a tile 
         url = "http://maptile.maps.svc.ovi.com/maptiler/v2/maptile/newest/hybrid.day/%i/%i/%i/256/png8" % (self.zoom,math.floor(self.x),math.floor(self.y))
-        print url+'\n'
         filename = "../../SatTiles/%i-%i-%i.png" % (self.zoom,math.floor(self.x),math.floor(self.y))
+        print filename
         urllib.urlretrieve(url, filename)
-        print "done."
-        
+        # Show Tile
+        self.master.loadedTiles.append((self.x,self.y,self.zoom))
+        self.showTile()
         
 
 class PolyArea(Polygon):

@@ -21,12 +21,14 @@ def close(event):
 
 
 class Generate(ttk.Frame):   
-    def __init__(self,mainFrame,displayFrame,aircraftFrame):
+    def __init__(self,mainFrame,displayFrame,aircraftFrame,originFrame,volumeFrame):
         # Create Generate frame
         ttk.Frame.__init__(self,mainFrame,padding="3 3 3 3")
         self.mainFrame = mainFrame
         self.displayFrame = displayFrame
         self.aircraftFrame = aircraftFrame
+        self.originFrame = originFrame
+        self.volumeFrame = volumeFrame
         # Create Load Button
         self.loadButton = tk.Button(self,text="Load Config",command=self.on_load_config)
         self.loadButton.grid(column=0,row=0)
