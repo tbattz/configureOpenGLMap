@@ -43,7 +43,7 @@ originFrame.grid(column=0,row=4,sticky='w')
 ttk.Separator(mainFrame,orient=HORIZONTAL).grid(column=0,row=5,sticky='ew')
 
 # Create Volumne section
-volumeFrame = volume.Volume(root,mainFrame)
+volumeFrame = volume.Volume(root,mainFrame,originFrame)
 volumeFrame.grid(column=0,row=6,sticky='w')
 
 # Add horizontal line

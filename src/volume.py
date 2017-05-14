@@ -48,9 +48,11 @@ def tileNum2LatLon(x, y, zoom):
 
 
 class Volume(ttk.Frame):
-    def __init__(self,root,mainFrame):
+    def __init__(self,root,mainFrame,originFrame):
         # Create Volume frame
         ttk.Frame.__init__(self,mainFrame,padding="3 0 0 0")
+        self.mainFrame = mainFrame
+        self.originFrame = originFrame
         # Create Volume label
         self.volLabel = ttk.Label(self, text='VOLUMES', font=(None,16)).grid(column=0, row=0, sticky=tk.W)
         # Create Add/Remove buttons
@@ -85,27 +87,35 @@ class Volume(ttk.Frame):
         # Move Map Callbacks
         self.cid = self.fig.canvas.mpl_connect('key_press_event',self.on_key_pressed)
         
+        # Get origin
+        lat = float(self.originFrame.latVar.get())
+        lon = float(self.originFrame.lonVar.get())
+        alt = float(self.originFrame.altVar.get())
+        head = float(self.originFrame.headVar.get())
+        origin = [lat, lon, alt, head]
+        print origin
+        
         # Load Map
         #self.plotMapTile()
         imagePath = "../../SatTiles/18-236831-160989.png"
         self.zoom = 18
         self.mapTiles = []
-        self.mapTiles.append(MapTile(imagePath,self.axes,0.0,0.5,0.5,1.0,1))
-        self.mapTiles.append(MapTile(imagePath,self.axes,0.0,0.0,0.5,0.5,1))
-        self.mapTiles.append(MapTile(imagePath,self.axes,0.5,0.0,1.0,0.5,1))
-        self.mapTiles.append(MapTile(imagePath,self.axes,0.5,0.5,1.0,1.0,1))
+        #self.mapTiles.append(MapTile(imagePath,self.axes,0.0,0.5,0.5,1.0,1))
+        #self.mapTiles.append(MapTile(imagePath,self.axes,0.0,0.0,0.5,0.5,1))
+        #self.mapTiles.append(MapTile(imagePath,self.axes,0.5,0.0,1.0,0.5,1))
+        #self.mapTiles.append(MapTile(imagePath,self.axes,0.5,0.5,1.0,1.0,1))
         # Download test
         imagePath = "../../SateTiles-18-0-0.png"
         self.mapTiles.append(MapTile(imagePath,self.axes,0.25,0.75,0.25,0.75,self.zoom))
         
         # Create Points
         self.points = []
-        self.points.append(DragPoint(self.fig,0.5,0.5,colStr='b'))
-        self.points.append(DragPoint(self.fig,0.75,0.75,colStr='b'))
-        self.points.append(DragPoint(self.fig,1.0,0.0,colStr='b'))
+        self.points.append(DragPoint(self.fig,origin[1]-0.05,origin[0]-0.05,colStr='b'))
+        self.points.append(DragPoint(self.fig,origin[1]+0.05,origin[0]+0.05,colStr='b'))
+        self.points.append(DragPoint(self.fig,origin[1]+0.05,origin[0]-0.05,colStr='b'))
         
-        self.axes.set_xlim(0,1)
-        self.axes.set_ylim(0,1)
+        self.axes.set_xlim(origin[1]-0.1,origin[1]+0.1)
+        self.axes.set_ylim(origin[0]-0.1,origin[0]+0.1)
         
          
         # Create Polygon
@@ -153,6 +163,9 @@ class Volume(ttk.Frame):
         elif (event.key == '+'):
             self.axes.set_xlim(xlim[0]+xdiff,xlim[1]-xdiff)
             self.axes.set_ylim(ylim[0]+ydiff,ylim[1]-ydiff)
+            
+        # Adjust Limits
+        self.checkLimits()
         
         # Check Tiles
         self.checkRequiredTiles()
@@ -172,12 +185,34 @@ class Volume(ttk.Frame):
         elif (event.button == 'down'):
             self.axes.set_xlim(xlim[0]-xdiff,xlim[1]+xdiff)
             self.axes.set_ylim(ylim[0]-ydiff,ylim[1]+ydiff)
+            
+        # Adjust Limits
+        self.checkLimits()
         
         # Check Tiles
         self.checkRequiredTiles()
         
         # Redraw
         self.polygon[0].reDrawPolyPoints()
+ 
+    def checkLimits(self):
+        # Checks if the axes limits are bound to the correct range for lat, lon
+        xlim = self.axes.get_xlim()
+        ylim = self.axes.get_ylim()
+        xmin = xlim[0]
+        xmax = xlim[1]
+        ymin = ylim[0]
+        ymax = ylim[1]
+        if (xmin < -180):
+            xmin = 180
+        if (xmax > 180):
+            xmax = 180
+        if (ymin < -90):
+            ymin = -90
+        if (ymax > 90):
+            ymax = 90
+        self.axes.set_xlim(xmin,xmax)
+        self.axes.set_ylim(ymin,ymax)
  
     def on_canvas_pressed(self,event):
         # Check to add or remove new points
@@ -220,10 +255,12 @@ class Volume(ttk.Frame):
         # Lower bounds
         [x1,y1] = latLon2TileNum(ylim[0], xlim[0], self.zoom)
         [x2,y2] = latLon2TileNum(ylim[1], xlim[1], self.zoom)
-        x = range(int(x1),int(x2))
-        y = range(int(y2),int(y2))
-        print x
-        print y
+        xmin = min(x1,x2)
+        xmax = max(x1,x2)
+        ymin = min(y1,y2)
+        ymax = max(y1,y2)
+        x = range(int(xmin),int(xmax))
+        y = range(int(ymin),int(ymax))
     
         
 class MapTile():
