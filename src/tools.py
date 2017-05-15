@@ -13,10 +13,6 @@ import os, sys
 import time
 
 
-# Close window on ESC
-def close(event):
-    sys.exit()
-
 
 
 
@@ -38,6 +34,11 @@ class Generate(ttk.Frame):
          # Create Generate Button
         self.genButton = tk.Button(self,text="Generate Configuration",command=self.on_gen_config)
         self.genButton.grid(column=0,row=1,columnspan=2)
+        
+    # Close window on ESC
+    def close(self,event):
+        self.volumeFrame.close()
+        sys.exit()
         
     def on_load_config(self):
         print 1

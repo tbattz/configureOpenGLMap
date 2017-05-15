@@ -57,7 +57,7 @@ generateFrame.grid(column=0,row=8)
 
 
 # Close on Escape
-root.bind('<Escape>',tools.close)
+root.bind('<Key-Escape>',generateFrame.close)
 
 # Show gui
 root.mainloop()
