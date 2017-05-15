@@ -57,11 +57,13 @@ class Volume(ttk.Frame):
         self.volLabel = ttk.Label(self, text='VOLUMES', font=(None,16)).grid(column=0, row=0, sticky=tk.W)
         # Create Add/Remove buttons
         self.addRemoveFrame = tk.Frame(self)
-        self.addRemoveFrame.grid(column=3,row=0,sticky='e')
+        self.addRemoveFrame.grid(column=7,row=0,sticky='e')
         self.addButton = tk.Button(self.addRemoveFrame,bg="green",text="+",command=self.on_add_row)
         self.addButton.grid(column=0,row=0)
         self.removeButton = tk.Button(self.addRemoveFrame,bg="red",text="-",command=self.on_remove_row)
-        self.removeButton.grid(column=1,row=0)
+        self.removeButton.grid(column=1,row=0)      
+                
+        self.polyLine = PolygonLine(self,1)
                 
         # Create Figure
         self.createFigure(root)
@@ -148,7 +150,7 @@ class Volume(ttk.Frame):
         
         # Show Canvas
         self.canvas.show()
-        self.canvas.get_tk_widget().grid(column=0,row=1,columnspan=4)
+        self.canvas.get_tk_widget().grid(column=0,row=10,columnspan=8)
 
         # Put old background back
         self.background = self.fig.canvas.copy_from_bbox(self.axes.bbox)
@@ -499,6 +501,10 @@ class DragPoint(patches.Ellipse):
         self.background = self.figure.canvas.copy_from_bbox(self.axes.bbox)
         self.connect()
         
+        # Add Annotation
+        self.h = 10
+        self.heightAnn = self.axes.annotate(str(self.h),xy=(self.x,self.y),horizontalalignment='center',verticalalignment='center',color='white')
+        
     def connect(self):
         # Connects to the required events
         self.cidpress = self.figure.canvas.mpl_connect('button_press_event',self.on_pressed)
@@ -558,4 +564,32 @@ class DragPoint(patches.Ellipse):
         self.figure.canvas.mpl_disconnect(self.cidpress)
         self.figure.canvas.mpl_disconnect(self.cidrelease)
         self.figure.canvas.mpl_disconnect(self.cidmotion)
+        
+class PolygonLine():
+    # Creates a polygon line for adjust polygon properties
+    def __init__(self,masterFrame,row):
+        self.masterFrame = masterFrame
+        self.row = row
+        # Create polygon name entry box
+        self.nameVar = tk.StringVar()
+        self.nameEntry = tk.Entry(self.masterFrame,textvariable=self.nameVar,width=10)
+        self.nameVar.set("Polygon %i" % row)
+        self.nameEntry.grid(column=0,row=row,sticky=tk.W)
+        # RGB label
+        self.rgbLabel = ttk.Label(self.masterFrame,text='RGB (0-255)').grid(column=1,row=row,sticky=tk.W)
+        # RGB Entry
+        self.rVar = tk.StringVar()
+        self.rEntry = tk.Entry(self.masterFrame,textvariable=self.rVar,width=4).grid(column=2,row=row,sticky=tk.W)
+        self.gVar = tk.StringVar()
+        self.gEntry = tk.Entry(self.masterFrame,textvariable=self.gVar,width=4).grid(column=3,row=row,sticky=tk.W)
+        self.bVar = tk.StringVar()
+        self.bEntry = tk.Entry(self.masterFrame,textvariable=self.bVar,width=4).grid(column=4,row=row,sticky=tk.W)
+        # Create edit points button (launches window to manually adjust points
+        self.editPointsButton = tk.Button(self.masterFrame,text='Edit Points',command=self.on_edit_points)
+        self.editPointsButton.grid(column=7,row=row,sticky=tk.W)
+        
+    def on_edit_points(self):
+        # Edit points manually
+        pass
+        
         
