@@ -442,6 +442,7 @@ class PolyArea(Polygon):
     def removePoint(self,ind):
         # Removes a point given the index in self.pointList
         self.pointList[ind].remove()
+        self.pointList[ind].heightAnn.remove()
         del self.pointList[ind]
         # Redraw
         self.reDrawPolyPoints()
