@@ -58,7 +58,7 @@ class Aircraft(ttk.Frame):
         self.ipEntry[row].grid(column=2,row=row+1,sticky=tk.W, padx=5)
         # Create Port Entry
         self.port.append(tk.StringVar())
-        self.portEntry.append(tk.Entry(self,textvariable=self.port[row],width=10))
+        self.portEntry.append(tk.Entry(self,textvariable=self.port[row],width=8))
         self.portEntry[row].grid(column=3,row=row+1,sticky=tk.W, padx=5)
         # Set initial values
         self.name[row].set('Aircraft_'+str(row))

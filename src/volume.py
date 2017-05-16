@@ -54,16 +54,23 @@ class Volume(ttk.Frame):
         self.mainFrame = mainFrame
         self.originFrame = originFrame
         # Create Volume label
-        self.volLabel = ttk.Label(self, text='VOLUMES', font=(None,16)).grid(column=0, row=0, sticky=tk.W)
+        self.volLabel = ttk.Label(self, text='VOLUMES', font=(None,16)).grid(column=0, row=0, columnspan=2, sticky=tk.W)
         # Create Add/Remove buttons
         self.addRemoveFrame = tk.Frame(self)
         self.addRemoveFrame.grid(column=7,row=0,sticky='e')
         self.addButton = tk.Button(self.addRemoveFrame,bg="green",text="+",command=self.on_add_row)
         self.addButton.grid(column=0,row=0)
         self.removeButton = tk.Button(self.addRemoveFrame,bg="red",text="-",command=self.on_remove_row)
-        self.removeButton.grid(column=1,row=0)      
+        self.removeButton.grid(column=1,row=0) 
+        # Create Polygon Name Label
+        self.polyName = ttk.Label(self,text="Name").grid(column=0,row=1,sticky=tk.W)     
+        # Create RGB Label
+        self.rgbLabel = ttk.Label(self,text="RGB (0-255)").grid(column=1,row=1,columnspan=3)
+        # Alpha Label
+        self.alphaLabel = ttk.Label(self,text='Alpha (0-1)').grid(column=4,row=1)
                 
-        self.polyLine = PolygonLine(self,1)
+                
+        self.polyLine = PolygonLine(self,2)
                 
         # Create Figure
         self.createFigure(root)
@@ -574,21 +581,26 @@ class PolygonLine():
         self.row = row
         # Create polygon name entry box
         self.nameVar = tk.StringVar()
-        self.nameEntry = tk.Entry(self.masterFrame,textvariable=self.nameVar,width=10)
-        self.nameVar.set("Polygon %i" % row)
+        self.nameEntry = tk.Entry(self.masterFrame,textvariable=self.nameVar,width=12)
+        self.nameVar.set("Polygon %i" % (row-1))
         self.nameEntry.grid(column=0,row=row,sticky=tk.W)
-        # RGB label
-        self.rgbLabel = ttk.Label(self.masterFrame,text='RGB (0-255)').grid(column=1,row=row,sticky=tk.W)
         # RGB Entry
         self.rVar = tk.StringVar()
-        self.rEntry = tk.Entry(self.masterFrame,textvariable=self.rVar,width=4).grid(column=2,row=row,sticky=tk.W)
+        self.rVar.set(0)
+        self.rEntry = tk.Entry(self.masterFrame,textvariable=self.rVar,width=4).grid(column=1,row=row)
         self.gVar = tk.StringVar()
-        self.gEntry = tk.Entry(self.masterFrame,textvariable=self.gVar,width=4).grid(column=3,row=row,sticky=tk.W)
+        self.gVar.set(0)
+        self.gEntry = tk.Entry(self.masterFrame,textvariable=self.gVar,width=4).grid(column=2,row=row)
         self.bVar = tk.StringVar()
-        self.bEntry = tk.Entry(self.masterFrame,textvariable=self.bVar,width=4).grid(column=4,row=row,sticky=tk.W)
+        self.bVar.set(255)
+        self.bEntry = tk.Entry(self.masterFrame,textvariable=self.bVar,width=4).grid(column=3,row=row)
+        # Alpha Entry
+        self.alphaVar = tk.StringVar()
+        self.alphaVar.set(0.5)
+        self.alphaEntry = tk.Entry(self.masterFrame,textvariable=self.alphaVar,width=8).grid(column=4,row=row)
         # Create edit points button (launches window to manually adjust points
         self.editPointsButton = tk.Button(self.masterFrame,text='Edit Points',command=self.on_edit_points)
-        self.editPointsButton.grid(column=7,row=row,sticky=tk.W)
+        self.editPointsButton.grid(column=7,row=row,sticky=tk.E)
         
     def on_edit_points(self):
         # Edit points manually
