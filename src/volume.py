@@ -25,6 +25,8 @@ import matplotlib.cbook as cbook
 
 import os, math, time
 
+import defcolours
+
 from threading import Thread
 import urllib
 
@@ -69,8 +71,9 @@ class Volume(ttk.Frame):
         # Alpha Label
         self.alphaLabel = ttk.Label(self,text='Alpha (0-1)').grid(column=4,row=1)
                 
-                
-        self.polyLine = PolygonLine(self,2)
+        # Polygon Rows
+        self.polygonRows = [PolygonLine(self,2)]        
+        
                 
         # Create Figure
         self.createFigure(root)
@@ -87,11 +90,18 @@ class Volume(ttk.Frame):
 
     def on_add_row(self):
         # Adds a row at the bottom of the current rows
-        pass
+        self.polygonRows.append(PolygonLine(self,len(self.polygonRows)+2))
 
     def on_remove_row(self):
         # Removes the last row
-        pass
+        if (len(self.polygonRows) > 0):
+            self.polygonRows[-1].editPointsButton.destroy()
+            self.polygonRows[-1].alphaEntry.destroy()
+            self.polygonRows[-1].bEntry.destroy()
+            self.polygonRows[-1].gEntry.destroy()
+            self.polygonRows[-1].rEntry.destroy()
+            self.polygonRows[-1].nameEntry.destroy()
+            del self.polygonRows[-1]
 
     def createFigure(self,root):
         # Creates a matplotlib figure
@@ -157,7 +167,7 @@ class Volume(ttk.Frame):
         
         # Show Canvas
         self.canvas.show()
-        self.canvas.get_tk_widget().grid(column=0,row=10,columnspan=8)
+        self.canvas.get_tk_widget().grid(column=0,row=100,columnspan=8)
 
         # Put old background back
         self.background = self.fig.canvas.copy_from_bbox(self.axes.bbox)
@@ -585,20 +595,28 @@ class PolygonLine():
         self.nameEntry = tk.Entry(self.masterFrame,textvariable=self.nameVar,width=12)
         self.nameVar.set("Polygon %i" % (row-1))
         self.nameEntry.grid(column=0,row=row,sticky=tk.W)
+        # Colour Generation
+        colInt = row - 2
+        while (colInt > len(defcolours.allColours)-1):
+            colInt -= len(defcolours.allColours)
         # RGB Entry
         self.rVar = tk.StringVar()
-        self.rVar.set(0)
-        self.rEntry = tk.Entry(self.masterFrame,textvariable=self.rVar,width=4).grid(column=1,row=row)
+        self.rVar.set(defcolours.allColours[colInt][0])
+        self.rEntry = tk.Entry(self.masterFrame,textvariable=self.rVar,width=4)
+        self.rEntry.grid(column=1,row=row)
         self.gVar = tk.StringVar()
-        self.gVar.set(0)
-        self.gEntry = tk.Entry(self.masterFrame,textvariable=self.gVar,width=4).grid(column=2,row=row)
+        self.gVar.set(defcolours.allColours[colInt][1])
+        self.gEntry = tk.Entry(self.masterFrame,textvariable=self.gVar,width=4)
+        self.gEntry.grid(column=2,row=row)
         self.bVar = tk.StringVar()
-        self.bVar.set(255)
-        self.bEntry = tk.Entry(self.masterFrame,textvariable=self.bVar,width=4).grid(column=3,row=row)
+        self.bVar.set(defcolours.allColours[colInt][2])
+        self.bEntry = tk.Entry(self.masterFrame,textvariable=self.bVar,width=4)
+        self.bEntry.grid(column=3,row=row)
         # Alpha Entry
         self.alphaVar = tk.StringVar()
         self.alphaVar.set(0.5)
-        self.alphaEntry = tk.Entry(self.masterFrame,textvariable=self.alphaVar,width=8).grid(column=4,row=row)
+        self.alphaEntry = tk.Entry(self.masterFrame,textvariable=self.alphaVar,width=8)
+        self.alphaEntry.grid(column=4,row=row)
         # Create edit points button (launches window to manually adjust points
         self.editPointsButton = tk.Button(self.masterFrame,text='Edit Points',command=self.on_edit_points)
         self.editPointsButton.grid(column=7,row=row,sticky=tk.E)
