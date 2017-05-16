@@ -71,12 +71,11 @@ class Volume(ttk.Frame):
         # Alpha Label
         self.alphaLabel = ttk.Label(self,text='Alpha (0-1)').grid(column=4,row=1)
                 
-        # Polygon Rows
-        self.polygonRows = [PolygonLine(self,2)]        
-        
-                
         # Create Figure
         self.createFigure(root)
+        
+        # Polygon Rows
+        self.polygonRows = [PolygonLine(self,2)] 
         
     def on_download_button(self):
         pass
@@ -151,19 +150,18 @@ class Volume(ttk.Frame):
         self.showThread = Thread(target=self.showTiles,args=())
         self.showThread.start()
         
-        # Create Points
+        '''# Create Points
         self.points = []
         self.points.append(DragPoint(self.fig,self.origin[1]-0.0005,self.origin[0]-0.0005,colStr='b'))
         self.points.append(DragPoint(self.fig,self.origin[1]+0.0005,self.origin[0]+0.0005,colStr='b'))
         self.points.append(DragPoint(self.fig,self.origin[1]+0.0005,self.origin[0]-0.0005,colStr='b'))        
          
         # Create Polygon
-        self.polygon = [PolyArea(self.fig, self.points, colStr='b')]
+        self.polygon = [PolyArea(self.fig, self.points, colStr='b')]'''
                 
-        # Add Patches 
-        self.patchCollection = PatchCollection(self.polygon,alpha=0.5)
-        self.patchCollection.set_zorder(1)
-        self.axes.add_collection(self.patchCollection)
+        # Add Patches
+        self.polygon = [] 
+
         
         # Show Canvas
         self.canvas.show()
@@ -173,10 +171,10 @@ class Volume(ttk.Frame):
         self.background = self.fig.canvas.copy_from_bbox(self.axes.bbox)
         self.fig.canvas.restore_region(self.background)
 
-        # Redraw points to appear on top of polygon
+        '''# Redraw points to appear on top of polygon
         for pt in self.points:
             pt.set_zorder(2)
-            self.axes.draw_artist(pt)
+            self.axes.draw_artist(pt)'''
         
         # Setup callback for click-point adding
         self.fig.canvas.mpl_connect('button_press_event',self.on_canvas_pressed)
@@ -272,16 +270,20 @@ class Volume(ttk.Frame):
                 # Left Mouse Button
                 # Check if over a point
                 onPoint = False
-                for pt in self.polygon[0].pointList:
-                    contains, attr = pt.contains(event)
-                    if contains:
-                        onPoint = True
-                if not onPoint:
+                inPoly = None
+                for poly in self.polygon:
+                    for pt in poly.pointList:
+                        contains, attr = pt.contains(event)
+                        if contains:
+                            onPoint = True
+                            inPoly = poly
+                if (not onPoint) and (inPoly is None) :
                     # Get current location
                     x = event.xdata
                     y = event.ydata
                     # Add new point and redaw
-                    self.polygon[0].addNewPoint(DragPoint(self.fig,x,y,colStr='b'))
+                    poly = self.polygon[-1]
+                    poly.addNewPoint(DragPoint(self.fig,x,y,colTuple=poly.polygonLine.colour))
 
             elif (event.button == 3):
                     # Right mouse button
@@ -414,9 +416,10 @@ class MapTile():
 
 class PolyArea(Polygon):
     # The polygon defining an area on the map
-    def __init__(self,fig,pointList,colStr='b'):
+    def __init__(self,fig,pointList,polygonLine,colTuple):
         self.fig = fig
         self.pointList = pointList # List of drag points
+        self.polygonLine = polygonLine
         self.pts = [] # [[x1,y1],[x2,y2],...[xn,yn]]
         self.polyCreated = False
         
@@ -427,7 +430,7 @@ class PolyArea(Polygon):
             pt.masterPoly = self
             
         # Initialise polygon
-        Polygon.__init__(self,self.pts,alpha=0.5,closed=True)
+        Polygon.__init__(self,self.pts,alpha=0.5,fc=colTuple,closed=True)
         
         # Add poly to axes
         self.fig.axes[0].add_patch(self)
@@ -506,8 +509,8 @@ class DragPoint(patches.Ellipse):
     # Create lock that only one instance can hold at a time
     lock = None
     # A point that can be dragged with the mouse
-    def __init__(self,fig,x,y,colStr='b',masterPolygon=None):
-        patches.Ellipse.__init__(self,(x,y),0.00015,0.00015,fc=colStr,alpha=0.75,edgecolor='k')
+    def __init__(self,fig,x,y,colTuple,masterPolygon=None):
+        patches.Ellipse.__init__(self,(x,y),0.00015,0.00015,fc=colTuple,alpha=0.75,edgecolor='k')
         self.fig = fig
         self.x = x
         self.y = y
@@ -596,20 +599,20 @@ class PolygonLine():
         self.nameVar.set("Polygon %i" % (row-1))
         self.nameEntry.grid(column=0,row=row,sticky=tk.W)
         # Colour Generation
-        colInt = row - 2
-        while (colInt > len(defcolours.allColours)-1):
-            colInt -= len(defcolours.allColours)
+        self.colInt = row - 2
+        while (self.colInt > len(defcolours.allColours)-1):
+            self.colInt -= len(defcolours.allColours)
         # RGB Entry
         self.rVar = tk.StringVar()
-        self.rVar.set(defcolours.allColours[colInt][0])
+        self.rVar.set(defcolours.allColours[self.colInt][0])
         self.rEntry = tk.Entry(self.masterFrame,textvariable=self.rVar,width=4)
         self.rEntry.grid(column=1,row=row)
         self.gVar = tk.StringVar()
-        self.gVar.set(defcolours.allColours[colInt][1])
+        self.gVar.set(defcolours.allColours[self.colInt][1])
         self.gEntry = tk.Entry(self.masterFrame,textvariable=self.gVar,width=4)
         self.gEntry.grid(column=2,row=row)
         self.bVar = tk.StringVar()
-        self.bVar.set(defcolours.allColours[colInt][2])
+        self.bVar.set(defcolours.allColours[self.colInt][2])
         self.bEntry = tk.Entry(self.masterFrame,textvariable=self.bVar,width=4)
         self.bEntry.grid(column=3,row=row)
         # Alpha Entry
@@ -620,6 +623,27 @@ class PolygonLine():
         # Create edit points button (launches window to manually adjust points
         self.editPointsButton = tk.Button(self.masterFrame,text='Edit Points',command=self.on_edit_points)
         self.editPointsButton.grid(column=7,row=row,sticky=tk.E)
+        
+        # Create Polygon
+        self.createPolygon()
+        
+    
+    def createPolygon(self):
+        # Creates a polygon for the current polygon line and adds it to the canvas
+        # Create Points
+        self.points = []
+        fig = self.masterFrame.fig
+        origin = self.masterFrame.origin
+        self.colour = [x / 255 for x in defcolours.allColours[self.colInt]]
+        self.points.append(DragPoint(fig,origin[1]-0.0005,origin[0]-0.0005,colTuple=self.colour))
+        self.points.append(DragPoint(fig,origin[1]+0.0005,origin[0]+0.0005,colTuple=self.colour))
+        self.points.append(DragPoint(fig,origin[1]+0.0005,origin[0]-0.0005,colTuple=self.colour))        
+         
+        # Create Polygon
+        self.masterFrame.polygon.append(PolyArea(self.masterFrame.fig, self.points, self, colTuple=self.colour))
+        self.masterFrame.polygon[-1].set_zorder(1)
+        self.masterFrame.axes.add_artist(self.masterFrame.polygon[-1])
+
         
     def on_edit_points(self):
         # Edit points manually
