@@ -541,6 +541,8 @@ class DragPoint(patches.Ellipse):
                 dy = event.ydata - ypress
                 # Set new center
                 self.center = (self.center[0]+dx,self.center[1]+dy)
+                # Set annotation position
+                self.heightAnn.set_position((self.center[0],self.center[1]))
                 # Put old background back
                 self.figure.canvas.restore_region(self.background)
                 # Move stored point position
