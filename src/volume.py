@@ -74,6 +74,9 @@ class Volume(ttk.Frame):
         # Create Figure
         self.createFigure(root)
         
+        # Create point selection radio button
+        self.addPtRadio = tk.IntVar()
+                
         # Polygon Rows
         self.polygonRows = [PolygonLine(self,2)] 
         
@@ -95,6 +98,10 @@ class Volume(ttk.Frame):
         # Removes the last row
         if (len(self.polygonRows) > 0):
             self.polygonRows[-1].editPointsButton.destroy()
+            self.polygonRows[-1].radioButton.destroy()
+            if (self.addPtRadio.get()==len(self.polygonRows)-1):
+                if (len(self.polygonRows)>1):
+                    self.addPtRadio.set(len(self.polygonRows)-2)
             self.polygonRows[-1].alphaEntry.destroy()
             self.polygonRows[-1].bEntry.destroy()
             self.polygonRows[-1].gEntry.destroy()
@@ -282,21 +289,22 @@ class Volume(ttk.Frame):
                     x = event.xdata
                     y = event.ydata
                     # Add new point and redaw
-                    poly = self.polygon[-1]
+                    poly = self.polygon[self.addPtRadio.get()]
                     poly.addNewPoint(DragPoint(self.fig,x,y,colTuple=poly.polygonLine.colour))
 
             elif (event.button == 3):
                     # Right mouse button
                     # Find current point index
-                    if (len(self.polygon[0].pointList)>3):
+                    poly = self.polygon[self.addPtRadio.get()]
+                    if (len(poly.pointList)>3):
                         onPoint = None
-                        for i in range(0,len(self.polygon[0].pointList)):
-                            contains, attr = self.polygon[0].pointList[i].contains(event)
+                        for i in range(0,len(poly.pointList)):
+                            contains, attr = poly.pointList[i].contains(event)
                             if contains:
                                 onPoint = i
                         # Remove current point
                         if (onPoint is not None):
-                            self.polygon[0].removePoint(onPoint)
+                            poly.removePoint(onPoint)
                     else:
                         tkMessageBox.showerror(message='Cannot remove point. Minimum number of points for polygon: 3')
     
@@ -600,6 +608,7 @@ class PolygonLine():
         self.nameEntry.grid(column=0,row=row,sticky=tk.W)
         # Colour Generation
         self.colInt = row - 2
+        self.origRow = self.colInt
         while (self.colInt > len(defcolours.allColours)-1):
             self.colInt -= len(defcolours.allColours)
         # RGB Entry
@@ -620,6 +629,9 @@ class PolygonLine():
         self.alphaVar.set(0.5)
         self.alphaEntry = tk.Entry(self.masterFrame,textvariable=self.alphaVar,width=8)
         self.alphaEntry.grid(column=4,row=row)
+        # Create radio button - determines which polygon a point is added to
+        self.radioButton = tk.Radiobutton(self.masterFrame,text="",variable=self.masterFrame.addPtRadio,value=self.origRow)
+        self.radioButton.grid(column=5,row=row)
         # Create edit points button (launches window to manually adjust points
         self.editPointsButton = tk.Button(self.masterFrame,text='Edit Points',command=self.on_edit_points)
         self.editPointsButton.grid(column=7,row=row,sticky=tk.E)
