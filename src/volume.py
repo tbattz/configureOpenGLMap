@@ -53,6 +53,7 @@ class Volume(ttk.Frame):
     def __init__(self,root,mainFrame,originFrame):
         # Create Volume frame
         ttk.Frame.__init__(self,mainFrame,padding="3 0 0 0")
+        self.root = root
         self.mainFrame = mainFrame
         self.originFrame = originFrame
         # Create Volume label
@@ -223,7 +224,8 @@ class Volume(ttk.Frame):
         self.checkRequiredTiles()
             
         # Redraw
-        self.polygon[0].reDrawPolyPoints()
+        for poly in self.polygon:
+            poly.reDrawPolyPoints()
             
     def on_scroll_wheel(self,event):
         # Clear Download Queue
@@ -248,7 +250,8 @@ class Volume(ttk.Frame):
         self.checkRequiredTiles()
         
         # Redraw
-        self.polygon[0].reDrawPolyPoints()
+        for poly in self.polygon:
+            poly.reDrawPolyPoints()
  
     def checkLimits(self):
         # Checks if the axes limits are bound to the correct range for lat, lon
@@ -270,6 +273,8 @@ class Volume(ttk.Frame):
         self.axes.set_ylim(ymin,ymax)
  
     def on_canvas_pressed(self,event):
+        # Take focus
+        self.canvas._tkcanvas.focus_set()
         # Check to add or remove new points
         if (event.inaxes == self.axes):
             # Check for left/right click
@@ -290,7 +295,7 @@ class Volume(ttk.Frame):
                     y = event.ydata
                     # Add new point and redaw
                     poly = self.polygon[self.addPtRadio.get()]
-                    poly.addNewPoint(DragPoint(self.fig,x,y,colTuple=poly.polygonLine.colour))
+                    poly.addNewPoint(DragPoint(self,self.fig,x,y,colTuple=poly.polygonLine.colour))
 
             elif (event.button == 3):
                     # Right mouse button
@@ -438,7 +443,7 @@ class PolyArea(Polygon):
             pt.masterPoly = self
             
         # Initialise polygon
-        Polygon.__init__(self,self.pts,alpha=0.5,fc=colTuple,closed=True)
+        Polygon.__init__(self,self.pts,alpha=0.3,fc=colTuple,closed=True)
         
         # Add poly to axes
         self.fig.axes[0].add_patch(self)
@@ -517,8 +522,9 @@ class DragPoint(patches.Ellipse):
     # Create lock that only one instance can hold at a time
     lock = None
     # A point that can be dragged with the mouse
-    def __init__(self,fig,x,y,colTuple,masterPolygon=None):
+    def __init__(self,masterFrame,fig,x,y,colTuple,masterPolygon=None):
         patches.Ellipse.__init__(self,(x,y),0.00015,0.00015,fc=colTuple,alpha=0.75,edgecolor='k')
+        self.masterFrame = masterFrame
         self.fig = fig
         self.x = x
         self.y = y
@@ -614,26 +620,31 @@ class PolygonLine():
         # RGB Entry
         self.rVar = tk.StringVar()
         self.rVar.set(defcolours.allColours[self.colInt][0])
+        self.rVar.trace('w', self.on_rVar_change)
         self.rEntry = tk.Entry(self.masterFrame,textvariable=self.rVar,width=4)
         self.rEntry.grid(column=1,row=row)
         self.gVar = tk.StringVar()
         self.gVar.set(defcolours.allColours[self.colInt][1])
+        self.gVar.trace('w', self.on_gVar_change)
         self.gEntry = tk.Entry(self.masterFrame,textvariable=self.gVar,width=4)
         self.gEntry.grid(column=2,row=row)
         self.bVar = tk.StringVar()
         self.bVar.set(defcolours.allColours[self.colInt][2])
+        self.bVar.trace('w', self.on_bVar_change)
         self.bEntry = tk.Entry(self.masterFrame,textvariable=self.bVar,width=4)
         self.bEntry.grid(column=3,row=row)
         # Alpha Entry
         self.alphaVar = tk.StringVar()
-        self.alphaVar.set(0.5)
+        self.alphaVar.set(0.3)
+        self.alphaVar.trace('w', self.on_alphaVar_change)
         self.alphaEntry = tk.Entry(self.masterFrame,textvariable=self.alphaVar,width=8)
         self.alphaEntry.grid(column=4,row=row)
         # Create radio button - determines which polygon a point is added to
         self.radioButton = tk.Radiobutton(self.masterFrame,text="",variable=self.masterFrame.addPtRadio,value=self.origRow)
         self.radioButton.grid(column=5,row=row)
         # Create edit points button (launches window to manually adjust points
-        self.editPointsButton = tk.Button(self.masterFrame,text='Edit Points',command=self.on_edit_points)
+        tkColour = '#%02x%02x%02x' % (int(self.rVar.get()),int(self.gVar.get()),int(self.bVar.get()))
+        self.editPointsButton = tk.Button(self.masterFrame,text='Edit Points',bg=tkColour,command=self.on_edit_points)
         self.editPointsButton.grid(column=7,row=row,sticky=tk.E)
         
         # Create Polygon
@@ -647,17 +658,78 @@ class PolygonLine():
         fig = self.masterFrame.fig
         origin = self.masterFrame.origin
         self.colour = [x / 255 for x in defcolours.allColours[self.colInt]]
-        self.points.append(DragPoint(fig,origin[1]-0.0005,origin[0]-0.0005,colTuple=self.colour))
-        self.points.append(DragPoint(fig,origin[1]+0.0005,origin[0]+0.0005,colTuple=self.colour))
-        self.points.append(DragPoint(fig,origin[1]+0.0005,origin[0]-0.0005,colTuple=self.colour))        
+        self.points.append(DragPoint(self.masterFrame,fig,origin[1]-0.0005,origin[0]-0.0005,colTuple=self.colour))
+        self.points.append(DragPoint(self.masterFrame,fig,origin[1]+0.0005,origin[0]+0.0005,colTuple=self.colour))
+        self.points.append(DragPoint(self.masterFrame,fig,origin[1]+0.0005,origin[0]-0.0005,colTuple=self.colour))        
          
         # Create Polygon
         self.masterFrame.polygon.append(PolyArea(self.masterFrame.fig, self.points, self, colTuple=self.colour))
         self.masterFrame.polygon[-1].set_zorder(1)
         self.masterFrame.axes.add_artist(self.masterFrame.polygon[-1])
 
+    def on_rVar_change(self,*args):
+        # Red entry text box changes
+        self.rgb_change(self.rVar)
+       
+    def on_gVar_change(self,*args):
+        # Green entry text box changes
+        self.rgb_change(self.gVar)
+
+    def on_bVar_change(self,*args):
+        # Blue entry text box changes
+        self.rgb_change(self.bVar)
         
-    def on_edit_points(self):
+    def on_alphaVar_change(self,*args):
+        # Alpha entry text box changes
+        string = self.alphaVar.get()
+        if (len(string)>0):
+            try:
+                val = float(string)
+                if (val>=0.0 and val<=1.0):
+                    # Change Colour
+                    self.masterFrame.polygon[self.origRow].set_alpha(val)
+                    for pt in self.masterFrame.polygon[self.origRow].pointList:
+                        pt.set_alpha(val)
+                    # Redraw
+                    self.masterFrame.polygon[self.origRow].reDrawPolyPoints()
+                else:
+                    tkMessageBox.showerror(message="Alpha value must be float between 0.0 and 1.0")
+
+            except ValueError:
+                tkMessageBox.showerror(message="Alpha value must be float between 0.0 and 1.0")
+                
+
+    def rgb_change(self,var):
+        # Any RGB Entry Box Changes
+        # Check if entry is valid
+        if (len(var.get()) > 0):
+            rCheck = self.valid_0255(self.rVar.get())
+            gCheck = self.valid_0255(self.gVar.get())
+            bCheck = self.valid_0255(self.bVar.get()) 
+            if (rCheck and gCheck and bCheck):
+                # Change Colour
+                colVec = [int(self.rVar.get())/255.0,int(self.gVar.get())/255.0,int(self.bVar.get())/255.0]
+                self.masterFrame.polygon[self.origRow].set_facecolor(colVec)
+                tkColour = '#%02x%02x%02x' % (int(self.rVar.get()),int(self.gVar.get()),int(self.bVar.get()))
+                self.editPointsButton.configure(bg=tkColour)
+                for pt in self.masterFrame.polygon[self.origRow].pointList:
+                    pt.set_facecolor(colVec)
+                # Redraw
+                self.masterFrame.polygon[self.origRow].reDrawPolyPoints()
+            else:
+                tkMessageBox.showerror(message="RGB Values must be an integer from 0 to 255!")
+
+    def valid_0255(self,string):
+        # Check if string is valid from 0 to 255
+        result = False
+        if (string.isdigit()):
+            val = int(string)
+            if (val>=0 and val <=255):
+                result = True
+                
+        return result
+
+    def on_edit_points(self,*args):
         # Edit points manually
         pass
         
