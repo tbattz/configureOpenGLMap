@@ -98,6 +98,7 @@ class Volume(ttk.Frame):
     def on_remove_row(self):
         # Removes the last row
         if (len(self.polygonRows) > 0):
+            # Remove entry information
             self.polygonRows[-1].editPointsButton.destroy()
             self.polygonRows[-1].radioButton.destroy()
             if (self.addPtRadio.get()==len(self.polygonRows)-1):
@@ -108,7 +109,17 @@ class Volume(ttk.Frame):
             self.polygonRows[-1].gEntry.destroy()
             self.polygonRows[-1].rEntry.destroy()
             self.polygonRows[-1].nameEntry.destroy()
+            # Remove Points from Polygon
+            for pt in self.polygonRows[-1].masterFrame.polygon[-1].pointList:
+                pt.heightAnn.remove()
+                pt.remove()
+            # Remove Polygon from figure
+            self.polygonRows[-1].masterFrame.polygon[-1].set_visible(False)
             del self.polygonRows[-1]
+            del self.polygon[-1]
+
+            
+             
 
     def createFigure(self,root):
         # Creates a matplotlib figure
