@@ -88,8 +88,8 @@ class Volume(ttk.Frame):
         # On Close window, stop thread
         self.downloadRunning = False
         self.showRunning = False
-        self.downThread.join(1)
-        self.showThread.join(1)
+        self.downThread.join(0.1)
+        self.showThread.join(0.1)
 
     def on_add_row(self):
         # Adds a row at the bottom of the current rows

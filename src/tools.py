@@ -17,9 +17,10 @@ import time
 
 
 class Generate(ttk.Frame):   
-    def __init__(self,mainFrame,displayFrame,aircraftFrame,originFrame,volumeFrame):
+    def __init__(self,root,mainFrame,displayFrame,aircraftFrame,originFrame,volumeFrame):
         # Create Generate frame
         ttk.Frame.__init__(self,mainFrame,padding="3 3 3 3")
+        self.root = root
         self.mainFrame = mainFrame
         self.displayFrame = displayFrame
         self.aircraftFrame = aircraftFrame
@@ -39,6 +40,11 @@ class Generate(ttk.Frame):
     def close(self,event):
         self.volumeFrame.close()
         sys.exit()
+
+    # On Exit Button Clicked
+    def closeExitButton(self):
+        self.volumeFrame.close()
+        self.root.quit()
         
     def on_load_config(self):
         print 1

@@ -50,7 +50,7 @@ volumeFrame.grid(column=0,row=6,sticky='w')
 ttk.Separator(mainFrame,orient=HORIZONTAL).grid(column=0,row=7,sticky='ew')
 
 # Create Generate section
-generateFrame = tools.Generate(mainFrame,displayFrame,aircraftFrame,originFrame,volumeFrame)
+generateFrame = tools.Generate(root,mainFrame,displayFrame,aircraftFrame,originFrame,volumeFrame)
 generateFrame.grid(column=0,row=8)
 
 
@@ -58,6 +58,9 @@ generateFrame.grid(column=0,row=8)
 
 # Close on Escape
 root.bind('<Key-Escape>',generateFrame.close)
+
+# Change close function
+root.protocol("WM_DELETE_WINDOW", generateFrame.closeExitButton)
 
 # Show gui
 root.mainloop()
