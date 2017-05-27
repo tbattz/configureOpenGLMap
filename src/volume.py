@@ -112,16 +112,12 @@ class Volume(ttk.Frame):
             self.polygonRows[-1].rEntry.destroy()
             self.polygonRows[-1].nameEntry.destroy()
             # Remove Points from Polygon
-            for pt in self.polygonRows[-1].masterFrame.polygon[-1].pointList:
+            for pt in self.polygonRows[-1].polygon.pointList:
                 pt.heightAnn.remove()
                 pt.remove()
             # Remove Polygon from figure
-            self.polygonRows[-1].masterFrame.polygon[-1].set_visible(False)
+            self.polygonRows[-1].polygon.set_visible(False)
             del self.polygonRows[-1]
-            del self.polygon[-1]
-
-            
-             
 
     def createFigure(self,root):
         # Creates a matplotlib figure
@@ -170,20 +166,7 @@ class Volume(ttk.Frame):
         self.showRunning = True
         self.showThread = Thread(target=self.showTiles,args=())
         self.showThread.start()
-        
-        '''# Create Points
-        self.points = []
-        self.points.append(DragPoint(self.fig,self.origin[1]-0.0005,self.origin[0]-0.0005,colStr='b'))
-        self.points.append(DragPoint(self.fig,self.origin[1]+0.0005,self.origin[0]+0.0005,colStr='b'))
-        self.points.append(DragPoint(self.fig,self.origin[1]+0.0005,self.origin[0]-0.0005,colStr='b'))        
-         
-        # Create Polygon
-        self.polygon = [PolyArea(self.fig, self.points, colStr='b')]'''
-                
-        # Add Patches
-        self.polygon = [] 
-
-        
+                        
         # Show Canvas
         self.canvas.show()
         self.canvas.get_tk_widget().grid(column=0,row=100,columnspan=8)
@@ -191,11 +174,6 @@ class Volume(ttk.Frame):
         # Put old background back
         self.background = self.fig.canvas.copy_from_bbox(self.axes.bbox)
         self.fig.canvas.restore_region(self.background)
-
-        '''# Redraw points to appear on top of polygon
-        for pt in self.points:
-            pt.set_zorder(2)
-            self.axes.draw_artist(pt)'''
         
         # Setup callback for click-point adding
         self.fig.canvas.mpl_connect('button_press_event',self.on_canvas_pressed)
@@ -237,8 +215,8 @@ class Volume(ttk.Frame):
         self.checkRequiredTiles()
             
         # Redraw
-        for poly in self.polygon:
-            poly.reDrawPolyPoints()
+        for polyRow in self.polygonRows:
+            polyRow.polygon.reDrawPolyPoints()
             
     def on_scroll_wheel(self,event):
         # Clear Download Queue
@@ -296,24 +274,24 @@ class Volume(ttk.Frame):
                 # Check if over a point
                 onPoint = False
                 inPoly = None
-                for poly in self.polygon:
-                    for pt in poly.pointList:
+                for polyRow in self.polygonRows:
+                    for pt in polyRow.polygon.pointList:
                         contains, attr = pt.contains(event)
                         if contains:
                             onPoint = True
-                            inPoly = poly
+                            inPoly = polyRow.polygon
                 if (not onPoint) and (inPoly is None) :
                     # Get current location
                     x = event.xdata
                     y = event.ydata
                     # Add new point and redaw
-                    poly = self.polygon[self.addPtRadio.get()]
+                    poly = self.polygonRows[self.addPtRadio.get()].polygon
                     poly.addNewPoint(DragPoint(self,self.fig,x,y,colTuple=poly.polygonLine.colour))
 
             elif (event.button == 3):
                     # Right mouse button
                     # Find current point index
-                    poly = self.polygon[self.addPtRadio.get()]
+                    poly = self.polygonRows[self.addPtRadio.get()].polygon
                     if (len(poly.pointList)>3):
                         onPoint = None
                         for i in range(0,len(poly.pointList)):
@@ -678,11 +656,12 @@ class PolygonLine():
          
         # Create Polygon
         self.polygon = PolyArea(self.masterFrame.fig, self.points, self, colTuple=self.colour)
-        self.masterFrame.polygon.append(self.polygon)
-        #self.masterFrame.polygon.append(PolyArea(self.masterFrame.fig, self.points, self, colTuple=self.colour))
+        #self.masterFrame.polygon.append(self.polygon)
         
-        self.masterFrame.polygon[-1].set_zorder(1)
-        self.masterFrame.axes.add_artist(self.masterFrame.polygon[-1])
+        self.polygon.set_zorder(1)
+        self.masterFrame.axes.add_artist(self.polygon)
+        #self.masterFrame.polygon[-1].set_zorder(1)
+        #self.masterFrame.axes.add_artist(self.masterFrame.polygon[-1])
 
     def on_rVar_change(self,*args):
         # Red entry text box changes
@@ -704,11 +683,11 @@ class PolygonLine():
                 val = float(string)
                 if (val>=0.0 and val<=1.0):
                     # Change Colour
-                    self.masterFrame.polygon[self.origRow].set_alpha(val)
-                    for pt in self.masterFrame.polygon[self.origRow].pointList:
+                    self.polygon.set_alpha(val)
+                    for pt in self.polygon.pointList:
                         pt.set_alpha(val)
                     # Redraw
-                    self.masterFrame.polygon[self.origRow].reDrawPolyPoints()
+                    self.polygon.reDrawPolyPoints()
                 else:
                     tkMessageBox.showerror(message="Alpha value must be float between 0.0 and 1.0")
 
@@ -726,13 +705,13 @@ class PolygonLine():
             if (rCheck and gCheck and bCheck):
                 # Change Colour
                 colVec = [int(self.rVar.get())/255.0,int(self.gVar.get())/255.0,int(self.bVar.get())/255.0]
-                self.masterFrame.polygon[self.origRow].set_facecolor(colVec)
+                self.polygon.set_facecolor(colVec)
                 tkColour = '#%02x%02x%02x' % (int(self.rVar.get()),int(self.gVar.get()),int(self.bVar.get()))
                 self.editPointsButton.configure(bg=tkColour)
-                for pt in self.masterFrame.polygon[self.origRow].pointList:
+                for pt in self.polygon.pointList:
                     pt.set_facecolor(colVec)
                 # Redraw
-                self.masterFrame.polygon[self.origRow].reDrawPolyPoints()
+                self.polygon.reDrawPolyPoints()
             else:
                 tkMessageBox.showerror(message="RGB Values must be an integer from 0 to 255!")
 
