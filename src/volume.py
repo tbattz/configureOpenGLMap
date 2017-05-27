@@ -608,6 +608,17 @@ class DragPoint(patches.Ellipse):
                     for pt in self.masterPoly.pointList:
                         pt.axes.draw_artist(pt)
                 self.axes.draw_artist(self)
+                # Update Edit Points Window if open
+                editFrame = self.masterPoly.polygonLine.newWindow
+                if editFrame is not None:
+                    ind = self.masterPoly.pointList.index(self)
+                    entryRow = editFrame.entryRow[ind]
+                    entryRow.moving = True
+                    entryRow.latVar.set(self.y)
+                    entryRow.lonVar.set(self.x)
+                    entryRow.lowAltVar.set(self.lowHeight)
+                    entryRow.highAltVar.set(self.h)
+                    entryRow.moving = False
 
     
     def disconnect(self):
@@ -621,6 +632,7 @@ class PolygonLine():
         self.root = root
         self.masterFrame = masterFrame
         self.row = row
+        self.newWindow = None
         # Create polygon name entry box
         self.nameVar = tk.StringVar()
         self.nameEntry = tk.Entry(self.masterFrame,textvariable=self.nameVar,width=12)
@@ -750,9 +762,17 @@ class PolygonLine():
         self.newWindow = editPoints.EditPointsFrame(self.editWindow,self)
         # Close on Escape
         self.editWindow.bind('<Key-Escape>',self.closeEditPoints)
+        # Change close function
+        self.editWindow.protocol("WM_DELETE_WINDOW", self.closeExitButton)
         
     def closeEditPoints(self,event):
         # Close edit points window
+        self.newWindow = None
+        self.editWindow.destroy()
+        
+    def closeExitButton(self):
+        # Close edit points window
+        self.newWindow = None
         self.editWindow.destroy()
         
         

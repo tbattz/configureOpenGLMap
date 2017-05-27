@@ -42,6 +42,7 @@ class EntryRow:
         self.row = row
         self.num = num
         self.firstLoad = True
+        self.moving = False
         # Create point number label
         self.ptLabel = ttk.Label(self.frame,text=str(num))
         self.ptLabel.grid(column=0,row=row)
@@ -82,7 +83,7 @@ class EntryRow:
         pass
     
     def on_lat_change(self,*args):
-        if not self.firstLoad:
+        if (not self.firstLoad) and (not self.moving):
             # Lat Entry changes
             point = self.polygonLine.polygon.pointList[self.num]
             lat = float(self.latVar.get())
@@ -95,7 +96,7 @@ class EntryRow:
             self.polygonLine.polygon.reDrawPolyPoints()
     
     def on_lon_change(self,*args):
-        if not self.firstLoad:
+        if (not self.firstLoad) and (not self.moving):
             # Lon Entry changes
             point = self.polygonLine.polygon.pointList[self.num]
             lat = float(self.latVar.get())
@@ -108,12 +109,12 @@ class EntryRow:
             self.polygonLine.polygon.reDrawPolyPoints()
         
     def on_lowAlt_change(self,*args):
-        if not self.firstLoad:
+        if (not self.firstLoad) and (not self.moving):
             # Low Alt Entry changes
             self.polygonLine.polygon.pointList[self.num].lowHeight = float(self.lowAltVar.get())
                 
     def on_highAlt_change(self,*args):
-        if not self.firstLoad:
+        if (not self.firstLoad) and (not self.moving):
             # High Alt Entry changes
             self.polygonLine.polygon.pointList[self.num].h = float(self.highAltVar.get())
             self.polygonLine.polygon.pointList[self.num].heightAnn.set_text(self.highAltVar.get())
