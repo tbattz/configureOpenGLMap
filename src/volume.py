@@ -23,6 +23,8 @@ from matplotlib.figure import Figure
 from scipy.misc import imread
 import matplotlib.cbook as cbook
 
+import editPoints
+
 import os, math, time
 
 import defcolours
@@ -79,7 +81,7 @@ class Volume(ttk.Frame):
         self.addPtRadio = tk.IntVar()
                 
         # Polygon Rows
-        self.polygonRows = [PolygonLine(self,2)] 
+        self.polygonRows = [PolygonLine(self.root,self,2)] 
         
     def on_download_button(self):
         pass
@@ -93,7 +95,7 @@ class Volume(ttk.Frame):
 
     def on_add_row(self):
         # Adds a row at the bottom of the current rows
-        self.polygonRows.append(PolygonLine(self,len(self.polygonRows)+2))
+        self.polygonRows.append(PolygonLine(self.root,self,len(self.polygonRows)+2))
 
     def on_remove_row(self):
         # Removes the last row
@@ -615,7 +617,8 @@ class DragPoint(patches.Ellipse):
         
 class PolygonLine():
     # Creates a polygon line for adjust polygon properties
-    def __init__(self,masterFrame,row):
+    def __init__(self,root,masterFrame,row):
+        self.root = root
         self.masterFrame = masterFrame
         self.row = row
         # Create polygon name entry box
@@ -674,7 +677,10 @@ class PolygonLine():
         self.points.append(DragPoint(self.masterFrame,fig,origin[1]+0.0005,origin[0]-0.0005,colTuple=self.colour))        
          
         # Create Polygon
-        self.masterFrame.polygon.append(PolyArea(self.masterFrame.fig, self.points, self, colTuple=self.colour))
+        self.polygon = PolyArea(self.masterFrame.fig, self.points, self, colTuple=self.colour)
+        self.masterFrame.polygon.append(self.polygon)
+        #self.masterFrame.polygon.append(PolyArea(self.masterFrame.fig, self.points, self, colTuple=self.colour))
+        
         self.masterFrame.polygon[-1].set_zorder(1)
         self.masterFrame.axes.add_artist(self.masterFrame.polygon[-1])
 
@@ -742,6 +748,14 @@ class PolygonLine():
 
     def on_edit_points(self,*args):
         # Edit points manually
-        pass
+        self.editWindow = tk.Toplevel()
+        self.editWindow.title("Edit Points: %s" % self.nameVar.get())
+        self.newWindow = editPoints.EditPointsFrame(self.editWindow,self)
+        # Close on Escape
+        self.editWindow.bind('<Key-Escape>',self.closeEditPoints)
+        
+    def closeEditPoints(self,event):
+        # Close edit points window
+        self.editWindow.destroy()
         
         
