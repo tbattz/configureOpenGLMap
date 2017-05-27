@@ -290,19 +290,40 @@ class Volume(ttk.Frame):
 
             elif (event.button == 3):
                     # Right mouse button
-                    # Find current point index
-                    poly = self.polygonRows[self.addPtRadio.get()].polygon
-                    if (len(poly.pointList)>3):
-                        onPoint = None
-                        for i in range(0,len(poly.pointList)):
-                            contains, attr = poly.pointList[i].contains(event)
+                    # Get points mouse is over
+                    pts = []
+                    for polyRow in self.polygonRows:
+                        for pt in polyRow.polygon.pointList:
+                            contains, attr = pt.contains(event)
                             if contains:
-                                onPoint = i
-                        # Remove current point
-                        if (onPoint is not None):
-                            poly.removePoint(onPoint)
-                    else:
-                        tkMessageBox.showerror(message='Cannot remove point. Minimum number of points for polygon: 3')
+                                pts.append([pt,polyRow])
+                                                   
+                    # Find current point index
+                    pt = None
+                    if len(pts) > 1:
+                        radioVal = self.addPtRadio.get()
+                        for entry in pts:
+                            if (entry[1] == radioVal):
+                                pt = entry
+                                break
+                        if (pt is None):
+                            pt = pts[0]
+                    elif (len(pts) == 1):
+                        pt = pts[0]
+                    
+                    if (pt is not None):
+                        poly = pt[1].polygon
+                        if (len(poly.pointList)>3):
+                            onPoint = None
+                            for i in range(0,len(poly.pointList)):
+                                contains, attr = poly.pointList[i].contains(event)
+                                if contains:
+                                    onPoint = i
+                            # Remove current point
+                            if (onPoint is not None):
+                                poly.removePoint(onPoint)
+                        else:
+                            tkMessageBox.showerror(message='Cannot remove point. Minimum number of points for polygon: 3')
     
     def downloadTiles(self):
         # Function to be threaded to download tiles
@@ -528,6 +549,7 @@ class DragPoint(patches.Ellipse):
         self.connect()
         
         # Add Annotation
+        self.lowHeight = 0
         self.h = 10
         self.heightAnn = self.axes.annotate(str(self.h),xy=(self.x,self.y),horizontalalignment='center',verticalalignment='center',color='white')
         
@@ -646,22 +668,18 @@ class PolygonLine():
     def createPolygon(self):
         # Creates a polygon for the current polygon line and adds it to the canvas
         # Create Points
-        self.points = []
+        points = []
         fig = self.masterFrame.fig
         origin = self.masterFrame.origin
         self.colour = [x / 255 for x in defcolours.allColours[self.colInt]]
-        self.points.append(DragPoint(self.masterFrame,fig,origin[1]-0.0005,origin[0]-0.0005,colTuple=self.colour))
-        self.points.append(DragPoint(self.masterFrame,fig,origin[1]+0.0005,origin[0]+0.0005,colTuple=self.colour))
-        self.points.append(DragPoint(self.masterFrame,fig,origin[1]+0.0005,origin[0]-0.0005,colTuple=self.colour))        
+        points.append(DragPoint(self.masterFrame,fig,origin[1]-0.0005,origin[0]-0.0005,colTuple=self.colour))
+        points.append(DragPoint(self.masterFrame,fig,origin[1]+0.0005,origin[0]+0.0005,colTuple=self.colour))
+        points.append(DragPoint(self.masterFrame,fig,origin[1]+0.0005,origin[0]-0.0005,colTuple=self.colour))        
          
         # Create Polygon
-        self.polygon = PolyArea(self.masterFrame.fig, self.points, self, colTuple=self.colour)
-        #self.masterFrame.polygon.append(self.polygon)
-        
+        self.polygon = PolyArea(self.masterFrame.fig, points, self, colTuple=self.colour)
         self.polygon.set_zorder(1)
         self.masterFrame.axes.add_artist(self.polygon)
-        #self.masterFrame.polygon[-1].set_zorder(1)
-        #self.masterFrame.axes.add_artist(self.masterFrame.polygon[-1])
 
     def on_rVar_change(self,*args):
         # Red entry text box changes

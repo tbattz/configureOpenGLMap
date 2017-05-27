@@ -41,6 +41,7 @@ class EntryRow:
         self.polygonLine = polygonLine
         self.row = row
         self.num = num
+        self.firstLoad = True
         # Create point number label
         self.ptLabel = ttk.Label(self.frame,text=str(num))
         self.ptLabel.grid(column=0,row=row)
@@ -59,12 +60,58 @@ class EntryRow:
         self.highAltEntry.grid(column=4,row=row)
         self.removeButton = tk.Button(self.frame,bg="red",text="-",command=self.on_remove_row)
         self.removeButton.grid(column=5,row=row)
+        # Add traces
+        self.latVar.trace('w',self.on_lat_change)
+        self.lonVar.trace('w',self.on_lon_change)
+        self.lowAltVar.trace('w',self.on_lowAlt_change)
+        self.highAltVar.trace('w',self.on_highAlt_change)
+        
+        self.updateFromPolygon()
+        
+        self.firstLoad = False
         
     def updateFromPolygon(self):
         # Updates the entry values from the polygon values
-        self.latVar.set(self.polygonLine)
+        self.latVar.set(self.polygonLine.polygon.pointList[self.num].y)
+        self.lonVar.set(self.polygonLine.polygon.pointList[self.num].x)
+        self.lowAltVar.set(self.polygonLine.polygon.pointList[self.num].lowHeight)
+        self.highAltVar.set(self.polygonLine.polygon.pointList[self.num].h)
     
     def on_remove_row(self):
         # Remove row and point
         pass
+    
+    def on_lat_change(self,*args):
+        if not self.firstLoad:
+            # Lat Entry changes
+            point = self.polygonLine.polygon.pointList[self.num]
+            lat = float(self.latVar.get())
+            lon = float(self.lonVar.get())
+            # Set values
+            point.y = lat
+            point.center = lon, lat
+            point.heightAnn.set_position((lon,lat))
+            # Redraw
+            self.polygonLine.polygon.reDrawPolyPoints()
+    
+    def on_lon_change(self,*args):
+        if not self.firstLoad:
+            # Lon Entry changes
+            point = self.polygonLine.polygon.pointList[self.num]
+            lat = float(self.latVar.get())
+            lon = float(self.lonVar.get())
+            # Set values
+            point.x = lon
+            point.center = lon, lat
+            point.heightAnn.set_position((lon,lat))
+            # Redraw
+            self.polygonLine.polygon.reDrawPolyPoints()
         
+    def on_lowAlt_change(self,*args):
+        # Low Alt Entry changes
+        pass
+    
+    def on_highAlt_change(self,*args):
+        # High Alt Entry changes
+        pass
+    
