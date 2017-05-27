@@ -108,10 +108,16 @@ class EntryRow:
             self.polygonLine.polygon.reDrawPolyPoints()
         
     def on_lowAlt_change(self,*args):
-        # Low Alt Entry changes
-        pass
-    
+        if not self.firstLoad:
+            # Low Alt Entry changes
+            self.polygonLine.polygon.pointList[self.num].lowHeight = float(self.lowAltVar.get())
+                
     def on_highAlt_change(self,*args):
-        # High Alt Entry changes
-        pass
+        if not self.firstLoad:
+            # High Alt Entry changes
+            self.polygonLine.polygon.pointList[self.num].h = float(self.highAltVar.get())
+            self.polygonLine.polygon.pointList[self.num].heightAnn.set_text(self.highAltVar.get())
+            # Redraw
+            self.polygonLine.polygon.reDrawPolyPoints()
+            
     
