@@ -297,6 +297,21 @@ class Volume(ttk.Frame):
                     # Add new point and redaw
                     poly = self.polygonRows[self.addPtRadio.get()].polygon
                     poly.addNewPoint(DragPoint(self,self.fig,x,y,colTuple=poly.polygonLine.colour))
+                    # Add Row to Edit Points dialog if open
+                    editPointsWind = poly.polygonLine.newWindow
+                    if editPointsWind is not None:
+                        # Add Entry Row
+                        i = editPointsWind.entryRow[-1].num + 1
+                        editPointsWind.entryRow.append(editPoints.EntryRow(editPointsWind,editPointsWind.frame,editPointsWind.polygonLine,i+2,i))
+                        # Renumber pts
+                        i = -1
+                        for pt in editPointsWind.entryRow:
+                            i += 1
+                            pt.num = i
+                            pt.labelVar.set(str(i))
+                        # Update Values
+                        for row in editPointsWind.entryRow:
+                            row.updateFromPolygon()
 
             elif (event.button == 3):
                     # Right mouse button
@@ -332,10 +347,18 @@ class Volume(ttk.Frame):
                             # Remove current point
                             if (onPoint is not None):
                                 if poly.polygonLine.newWindow is not None:
-                                    poly.polygonLine.newWindow.entryRow[onPoint].on_remove_row()
+                                    entryRow = poly.polygonLine.newWindow.entryRow[onPoint]
+                                    entryRow.on_remove_row()
+                                    #poly.polygonLine.newWindow.entryRow.remove(entryRow)
+                                    # Renumber points and move rows
+                                    editPointsWind = poly.polygonLine.newWindow
+                                    i = -1
+                                    for row in editPointsWind.entryRow:
+                                        i += 1
+                                        row.move_row(i+2)
                                 else:
                                     poly.removePoint(onPoint)
-                        else:
+                        else:       
                             tkMessageBox.showerror(message='Cannot remove point. Minimum number of points for polygon: 3')
     
     def downloadTiles(self):

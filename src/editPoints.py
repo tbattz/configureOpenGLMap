@@ -102,10 +102,21 @@ class EntryRow:
                     pt.num = i
                     pt.labelVar.set(str(i))
             # Remove Entry Row
-            del self
+            self.master.entryRow.remove(self)
         else:
             tkMessageBox.showerror(message='Cannot remove point. Minimum number of points for polygon: 3')
     
+    def move_row(self,newRow):
+        # Move row
+        self.row = newRow
+        self.num = newRow - 2
+        self.labelVar.set(str(self.num))
+        self.ptLabel.grid(column=0,row=newRow)
+        self.latEntry.grid(column=1,row=newRow)
+        self.lonEntry.grid(column=2,row=newRow)
+        self.lowAltEntry.grid(column=3,row=newRow)
+        self.highAltEntry.grid(column=4,row=newRow)
+        self.removeButton.grid(column=5,row=newRow)
     
     def on_lat_change(self,*args):
         if (not self.firstLoad) and (not self.moving):
