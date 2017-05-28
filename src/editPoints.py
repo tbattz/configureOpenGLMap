@@ -6,6 +6,7 @@
 
 import tkinter as tk
 from tkinter import ttk
+import tkMessageBox
 
 class EditPointsFrame:
     # Frame to edit coordinates of the polygon
@@ -31,12 +32,13 @@ class EditPointsFrame:
         # Creates the initial rows of entry boxes
         self.entryRow= []
         for i in range(0,len(self.polygonLine.polygon.pointList)):
-            self.entryRow.append(EntryRow(self.frame,self.polygonLine,i+2,i))
+            self.entryRow.append(EntryRow(self,self.frame,self.polygonLine,i+2,i))
 
 
 class EntryRow:
     # Creates an row of entry boxes
-    def __init__(self,frame,polygonLine,row,num):
+    def __init__(self,master,frame,polygonLine,row,num):
+        self.master = master
         self.frame = frame
         self.polygonLine = polygonLine
         self.row = row
@@ -44,7 +46,9 @@ class EntryRow:
         self.firstLoad = True
         self.moving = False
         # Create point number label
-        self.ptLabel = ttk.Label(self.frame,text=str(num))
+        self.labelVar = tk.StringVar()
+        self.labelVar.set(str(num))
+        self.ptLabel = ttk.Label(self.frame,textvariable=self.labelVar)
         self.ptLabel.grid(column=0,row=row)
         # Create Entry rows
         self.latVar = tk.StringVar()
@@ -80,7 +84,28 @@ class EntryRow:
     
     def on_remove_row(self):
         # Remove row and point
-        pass
+        if len(self.polygonLine.polygon.pointList)>3:
+            # Remove entry information
+            self.removeButton.destroy()
+            self.highAltEntry.destroy()
+            self.lowAltEntry.destroy()
+            self.lonEntry.destroy()
+            self.latEntry.destroy()
+            self.ptLabel.destroy()
+            # Remove point from polygon
+            self.polygonLine.polygon.removePoint(self.num)
+            # Renumber pts
+            i = -1
+            for pt in self.master.entryRow:
+                if (i != self.num):
+                    i += 1
+                    pt.num = i
+                    pt.labelVar.set(str(i))
+            # Remove Entry Row
+            del self
+        else:
+            tkMessageBox.showerror(message='Cannot remove point. Minimum number of points for polygon: 3')
+    
     
     def on_lat_change(self,*args):
         if (not self.firstLoad) and (not self.moving):
