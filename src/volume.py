@@ -116,6 +116,10 @@ class Volume(ttk.Frame):
             for pt in self.polygonRows[rowInd].polygon.pointList:
                 pt.heightAnn.remove()
                 pt.remove()
+            # Remove Edit Points window if open
+            if self.polygonRows[rowInd].newWindow is not None:
+                self.polygonRows[rowInd].closeExitButton()
+
             # Remove Polygon from figure
             self.polygonRows[rowInd].polygon.set_visible(False)
             del self.polygonRows[rowInd]
