@@ -101,23 +101,29 @@ class Volume(ttk.Frame):
         # Removes the last row
         if (len(self.polygonRows) > 0):
             # Remove entry information
-            self.polygonRows[-1].editPointsButton.destroy()
-            self.polygonRows[-1].radioButton.destroy()
-            if (self.addPtRadio.get()==len(self.polygonRows)-1):
+            rowInd = self.addPtRadio.get()
+            self.polygonRows[rowInd].editPointsButton.destroy()
+            self.polygonRows[rowInd].radioButton.destroy()
+            if (self.addPtRadio.get()==rowInd):
                 if (len(self.polygonRows)>1):
-                    self.addPtRadio.set(len(self.polygonRows)-2)
-            self.polygonRows[-1].alphaEntry.destroy()
-            self.polygonRows[-1].bEntry.destroy()
-            self.polygonRows[-1].gEntry.destroy()
-            self.polygonRows[-1].rEntry.destroy()
-            self.polygonRows[-1].nameEntry.destroy()
+                    self.addPtRadio.set(0)
+            self.polygonRows[rowInd].alphaEntry.destroy()
+            self.polygonRows[rowInd].bEntry.destroy()
+            self.polygonRows[rowInd].gEntry.destroy()
+            self.polygonRows[rowInd].rEntry.destroy()
+            self.polygonRows[rowInd].nameEntry.destroy()
             # Remove Points from Polygon
-            for pt in self.polygonRows[-1].polygon.pointList:
+            for pt in self.polygonRows[rowInd].polygon.pointList:
                 pt.heightAnn.remove()
                 pt.remove()
             # Remove Polygon from figure
-            self.polygonRows[-1].polygon.set_visible(False)
-            del self.polygonRows[-1]
+            self.polygonRows[rowInd].polygon.set_visible(False)
+            del self.polygonRows[rowInd]
+            # Renumber other rows
+            i = -1
+            for row in self.polygonRows:
+                i += 1
+                row.moveRow(i+2)
 
     def createFigure(self,root):
         # Creates a matplotlib figure
@@ -693,6 +699,27 @@ class PolygonLine():
         self.polygon = PolyArea(self.masterFrame.fig, points, self, colTuple=self.colour)
         self.polygon.set_zorder(1)
         self.masterFrame.axes.add_artist(self.polygon)
+
+    def moveRow(self,newRow):
+        # Moves the polygon line to a new row
+        self.row = newRow
+        # Colour Generation
+        self.colInt = newRow - 2
+        self.origRow = self.colInt
+        while (self.colInt > len(defcolours.allColours)-1):
+            self.colInt -= len(defcolours.allColours)
+        # Recreate new radio button
+        self.radioButton.destroy()
+        self.radioButton = tk.Radiobutton(self.masterFrame,text="",variable=self.masterFrame.addPtRadio,value=self.origRow)
+        self.radioButton.grid(column=5,row=newRow)
+        # Move entries
+        self.nameEntry.grid(column=0,row=newRow,sticky=tk.W)
+        self.rEntry.grid(column=1,row=newRow)
+        self.gEntry.grid(column=2,row=newRow)
+        self.bEntry.grid(column=3,row=newRow)
+        self.alphaEntry.grid(column=4,row=newRow)
+        self.radioButton.grid(column=5,row=newRow)
+        self.editPointsButton.grid(column=7,row=newRow,sticky=tk.E)
 
     def on_rVar_change(self,*args):
         # Red entry text box changes
