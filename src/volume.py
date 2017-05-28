@@ -637,6 +637,7 @@ class PolygonLine():
         self.nameVar = tk.StringVar()
         self.nameEntry = tk.Entry(self.masterFrame,textvariable=self.nameVar,width=12)
         self.nameVar.set("Polygon %i" % (row-1))
+        self.nameVar.trace('w',self.on_name_change)
         self.nameEntry.grid(column=0,row=row,sticky=tk.W)
         # Colour Generation
         self.colInt = row - 2
@@ -764,6 +765,11 @@ class PolygonLine():
         self.editWindow.bind('<Key-Escape>',self.closeEditPoints)
         # Change close function
         self.editWindow.protocol("WM_DELETE_WINDOW", self.closeExitButton)
+        
+    def on_name_change(self,*args):
+        # On Polygon name change
+        if self.newWindow is not None:
+            self.editWindow.wm_title("Edit Points: %s" % self.nameVar.get())
         
     def closeEditPoints(self,event):
         # Close edit points window
