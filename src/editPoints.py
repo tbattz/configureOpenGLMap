@@ -81,7 +81,7 @@ class EntryRow:
         self.lonVar.set(self.polygonLine.polygon.pointList[self.num].x)
         self.lowAltVar.set(self.polygonLine.polygon.pointList[self.num].lowHeight)
         self.highAltVar.set(self.polygonLine.polygon.pointList[self.num].h)
-    
+        
     def on_remove_row(self):
         # Remove row and point
         if len(self.polygonLine.polygon.pointList)>3:

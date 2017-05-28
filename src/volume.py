@@ -327,7 +327,10 @@ class Volume(ttk.Frame):
                                     onPoint = i
                             # Remove current point
                             if (onPoint is not None):
-                                poly.removePoint(onPoint)
+                                if poly.polygonLine.newWindow is not None:
+                                    poly.polygonLine.newWindow.entryRow[onPoint].on_remove_row()
+                                else:
+                                    poly.removePoint(onPoint)
                         else:
                             tkMessageBox.showerror(message='Cannot remove point. Minimum number of points for polygon: 3')
     
