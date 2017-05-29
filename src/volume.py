@@ -763,6 +763,14 @@ class PolygonLine():
         # Blue entry text box changes
         self.rgb_change(self.bVar)
         
+    def changeAlpha(self,val):
+        # Change Colour
+        self.polygon.set_alpha(val)
+        for pt in self.polygon.pointList:
+            pt.set_alpha(val)
+        # Redraw
+        self.polygon.reDrawPolyPoints()
+        
     def on_alphaVar_change(self,*args):
         # Alpha entry text box changes
         string = self.alphaVar.get()
@@ -770,18 +778,27 @@ class PolygonLine():
             try:
                 val = float(string)
                 if (val>=0.0 and val<=1.0):
-                    # Change Colour
-                    self.polygon.set_alpha(val)
-                    for pt in self.polygon.pointList:
-                        pt.set_alpha(val)
-                    # Redraw
-                    self.polygon.reDrawPolyPoints()
+                    self.changeAlpha(val)
                 else:
                     tkMessageBox.showerror(message="Alpha value must be float between 0.0 and 1.0")
+                    self.alphaVar.set('0.5')
+                    self.changeAlpha(0.5)
 
             except ValueError:
                 tkMessageBox.showerror(message="Alpha value must be float between 0.0 and 1.0")
+                self.alphaVar.set('0.5')
+                self.changeAlpha(0.5)
                 
+    def changeRGB(self):
+        # Change Colour
+        colVec = [int(self.rVar.get())/255.0,int(self.gVar.get())/255.0,int(self.bVar.get())/255.0]
+        self.polygon.set_facecolor(colVec)
+        tkColour = '#%02x%02x%02x' % (int(self.rVar.get()),int(self.gVar.get()),int(self.bVar.get()))
+        self.editPointsButton.configure(bg=tkColour)
+        for pt in self.polygon.pointList:
+            pt.set_facecolor(colVec)
+        # Redraw
+        self.polygon.reDrawPolyPoints()
 
     def rgb_change(self,var):
         # Any RGB Entry Box Changes
@@ -791,19 +808,11 @@ class PolygonLine():
             gCheck = tools.valid_0255(self.gVar.get())
             bCheck = tools.valid_0255(self.bVar.get()) 
             if (rCheck and gCheck and bCheck):
-                # Change Colour
-                colVec = [int(self.rVar.get())/255.0,int(self.gVar.get())/255.0,int(self.bVar.get())/255.0]
-                self.polygon.set_facecolor(colVec)
-                tkColour = '#%02x%02x%02x' % (int(self.rVar.get()),int(self.gVar.get()),int(self.bVar.get()))
-                self.editPointsButton.configure(bg=tkColour)
-                for pt in self.polygon.pointList:
-                    pt.set_facecolor(colVec)
-                # Redraw
-                self.polygon.reDrawPolyPoints()
+                self.changeRGB()
             else:
                 tkMessageBox.showerror(message="RGB Values must be an integer from 0 to 255!")
                 var.set('0')
-
+                self.changeRGB()
  
 
     def on_edit_points(self,*args):
