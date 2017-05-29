@@ -114,7 +114,7 @@ class Volume(ttk.Frame):
             self.polygonRows[rowInd].nameEntry.destroy()
             # Remove Points from Polygon
             for pt in self.polygonRows[rowInd].polygon.pointList:
-                pt.heightAnn.remove()
+                pt.ptAnn.remove()
                 pt.remove()
             # Remove Edit Points window if open
             if self.polygonRows[rowInd].newWindow is not None:
@@ -296,7 +296,7 @@ class Volume(ttk.Frame):
                     y = event.ydata
                     # Add new point and redaw
                     poly = self.polygonRows[self.addPtRadio.get()].polygon
-                    poly.addNewPoint(DragPoint(self,self.fig,x,y,colTuple=poly.polygonLine.colour))
+                    poly.addNewPoint(DragPoint(self,self.fig,x,y,len(poly.pointList),colTuple=poly.polygonLine.colour))
                     # Add Row to Edit Points dialog if open
                     editPointsWind = poly.polygonLine.newWindow
                     if editPointsWind is not None:
@@ -516,7 +516,7 @@ class PolyArea(Polygon):
     def removePoint(self,ind):
         # Removes a point given the index in self.pointList
         self.pointList[ind].remove()
-        self.pointList[ind].heightAnn.remove()
+        self.pointList[ind].ptAnn.remove()
         del self.pointList[ind]
         # Redraw
         self.reDrawPolyPoints()
@@ -553,6 +553,8 @@ class PolyArea(Polygon):
         oldPts = self.pointList
         self.pointList = []
         for i in range(0,len(oldPts)):
+            oldPts[sortedInd[i][0]].id = i
+            oldPts[sortedInd[i][0]].ptAnn.set_text(i)
             self.pointList.append(oldPts[sortedInd[i][0]])
         
 
@@ -570,12 +572,13 @@ class DragPoint(patches.Ellipse):
     # Create lock that only one instance can hold at a time
     lock = None
     # A point that can be dragged with the mouse
-    def __init__(self,masterFrame,fig,x,y,colTuple,masterPolygon=None):
+    def __init__(self,masterFrame,fig,x,y,id,colTuple,masterPolygon=None):
         patches.Ellipse.__init__(self,(x,y),0.00015,0.00015,fc=colTuple,alpha=0.75,edgecolor='k')
         self.masterFrame = masterFrame
         self.fig = fig
         self.x = x
         self.y = y
+        self.id = id
         self.masterPoly = masterPolygon
 
         # Setup Plot
@@ -586,8 +589,8 @@ class DragPoint(patches.Ellipse):
         
         # Add Annotation
         self.lowHeight = 0
-        self.h = 10
-        self.heightAnn = self.axes.annotate(str(self.h),xy=(self.x,self.y),horizontalalignment='center',verticalalignment='center',color='white')
+        self.highHeight = 10
+        self.ptAnn = self.axes.annotate(str(self.id),xy=(self.x,self.y),horizontalalignment='center',verticalalignment='center',color='white')
         
     def connect(self):
         # Connects to the required events
@@ -626,7 +629,7 @@ class DragPoint(patches.Ellipse):
                 # Set new center
                 self.center = (self.center[0]+dx,self.center[1]+dy)
                 # Set annotation position
-                self.heightAnn.set_position((self.center[0],self.center[1]))
+                self.ptAnn.set_position((self.center[0],self.center[1]))
                 # Put old background back
                 self.figure.canvas.restore_region(self.background)
                 # Move stored point position
@@ -653,7 +656,7 @@ class DragPoint(patches.Ellipse):
                     entryRow.latVar.set(self.y)
                     entryRow.lonVar.set(self.x)
                     entryRow.lowAltVar.set(self.lowHeight)
-                    entryRow.highAltVar.set(self.h)
+                    entryRow.highAltVar.set(self.highHeight)
                     entryRow.moving = False
 
     
@@ -721,9 +724,9 @@ class PolygonLine():
         fig = self.masterFrame.fig
         origin = self.masterFrame.origin
         self.colour = [x / 255 for x in defcolours.allColours[self.colInt]]
-        points.append(DragPoint(self.masterFrame,fig,origin[1]-0.0005,origin[0]-0.0005,colTuple=self.colour))
-        points.append(DragPoint(self.masterFrame,fig,origin[1]+0.0005,origin[0]+0.0005,colTuple=self.colour))
-        points.append(DragPoint(self.masterFrame,fig,origin[1]+0.0005,origin[0]-0.0005,colTuple=self.colour))        
+        points.append(DragPoint(self.masterFrame,fig,origin[1]-0.0005,origin[0]-0.0005,0,colTuple=self.colour))
+        points.append(DragPoint(self.masterFrame,fig,origin[1]+0.0005,origin[0]+0.0005,1,colTuple=self.colour))
+        points.append(DragPoint(self.masterFrame,fig,origin[1]+0.0005,origin[0]-0.0005,2,colTuple=self.colour))        
          
         # Create Polygon
         self.polygon = PolyArea(self.masterFrame.fig, points, self, colTuple=self.colour)

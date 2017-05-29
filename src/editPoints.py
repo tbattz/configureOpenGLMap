@@ -82,7 +82,7 @@ class EntryRow:
         self.latVar.set(self.polygonLine.polygon.pointList[self.num].y)
         self.lonVar.set(self.polygonLine.polygon.pointList[self.num].x)
         self.lowAltVar.set(self.polygonLine.polygon.pointList[self.num].lowHeight)
-        self.highAltVar.set(self.polygonLine.polygon.pointList[self.num].h)
+        self.highAltVar.set(self.polygonLine.polygon.pointList[self.num].highHeight)
         
     def on_remove_row(self):
         # Remove row and point
@@ -138,7 +138,7 @@ class EntryRow:
             # Set values
             point.y = lat
             point.center = lon, lat
-            point.heightAnn.set_position((lon,lat))
+            point.ptAnn.set_position((lon,lat))
             # Redraw
             self.polygonLine.polygon.reDrawPolyPoints()
     
@@ -160,7 +160,7 @@ class EntryRow:
             # Set values
             point.x = lon
             point.center = lon, lat
-            point.heightAnn.set_position((lon,lat))
+            point.ptAnn.set_position((lon,lat))
             # Redraw
             self.polygonLine.polygon.reDrawPolyPoints()
         
@@ -183,8 +183,7 @@ class EntryRow:
                 tkMessageBox.showerror(message="High Altitude (m) must be a float.")
                 self.highAltVar.set(float(self.lowAltVar.get())+1)
             # High Alt Entry changes
-            self.polygonLine.polygon.pointList[self.num].h = float(highAlt)
-            self.polygonLine.polygon.pointList[self.num].heightAnn.set_text(highAlt)
+            self.polygonLine.polygon.pointList[self.num].highHeight = float(highAlt)
             # Redraw
             self.polygonLine.polygon.reDrawPolyPoints()
             
