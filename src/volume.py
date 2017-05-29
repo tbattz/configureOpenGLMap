@@ -228,6 +228,10 @@ class Volume(ttk.Frame):
         for polyRow in self.polygonRows:
             polyRow.polygon.reDrawPolyPoints()
             
+        # Redraw Canvas
+        self.canvas.draw()
+            
+            
     def on_scroll_wheel(self,event):
         # Clear Download Queue
         self.downloadQueue = []
@@ -251,8 +255,12 @@ class Volume(ttk.Frame):
         self.checkRequiredTiles()
         
         # Redraw
-        for poly in self.polygon:
-            poly.reDrawPolyPoints()
+        if hasattr(self,'polygon'):
+            for poly in self.polygon:
+                poly.reDrawPolyPoints()
+                
+        # Redraw Canvas
+        self.canvas.draw()
  
     def checkLimits(self):
         # Checks if the axes limits are bound to the correct range for lat, lon
@@ -291,27 +299,28 @@ class Volume(ttk.Frame):
                             onPoint = True
                             inPoly = polyRow.polygon
                 if (not onPoint) and (inPoly is None) :
-                    # Get current location
-                    x = event.xdata
-                    y = event.ydata
-                    # Add new point and redaw
-                    poly = self.polygonRows[self.addPtRadio.get()].polygon
-                    poly.addNewPoint(DragPoint(self,self.fig,x,y,len(poly.pointList),colTuple=poly.polygonLine.colour))
-                    # Add Row to Edit Points dialog if open
-                    editPointsWind = poly.polygonLine.newWindow
-                    if editPointsWind is not None:
-                        # Add Entry Row
-                        i = editPointsWind.entryRow[-1].num + 1
-                        editPointsWind.entryRow.append(editPoints.EntryRow(editPointsWind,editPointsWind.frame,editPointsWind.polygonLine,i+2,i))
-                        # Renumber pts
-                        i = -1
-                        for pt in editPointsWind.entryRow:
-                            i += 1
-                            pt.num = i
-                            pt.labelVar.set(str(i))
-                        # Update Values
-                        for row in editPointsWind.entryRow:
-                            row.updateFromPolygon()
+                    if len(self.polygonRows)>0:
+                        # Get current location
+                        x = event.xdata
+                        y = event.ydata
+                        # Add new point and redaw
+                        poly = self.polygonRows[self.addPtRadio.get()].polygon
+                        poly.addNewPoint(DragPoint(self,self.fig,x,y,len(poly.pointList),colTuple=poly.polygonLine.colour))
+                        # Add Row to Edit Points dialog if open
+                        editPointsWind = poly.polygonLine.newWindow
+                        if editPointsWind is not None:
+                            # Add Entry Row
+                            i = editPointsWind.entryRow[-1].num + 1
+                            editPointsWind.entryRow.append(editPoints.EntryRow(editPointsWind,editPointsWind.frame,editPointsWind.polygonLine,i+2,i))
+                            # Renumber pts
+                            i = -1
+                            for pt in editPointsWind.entryRow:
+                                i += 1
+                                pt.num = i
+                                pt.labelVar.set(str(i))
+                            # Update Values
+                            for row in editPointsWind.entryRow:
+                                row.updateFromPolygon()
 
             elif (event.button == 3):
                     # Right mouse button
