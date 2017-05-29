@@ -10,6 +10,8 @@ import tkMessageBox
 
 import subprocess as sp
 
+import tools
+
 
 class Origin(ttk.Frame):   
     def __init__(self,root,mainFrame):
@@ -21,11 +23,11 @@ class Origin(ttk.Frame):
         self.latLabel = ttk.Label(self, text="Latitude").grid(column=0, row=1, sticky=tk.W)
         self.latLabel = ttk.Label(self, text="Longitude").grid(column=0, row=2, sticky=tk.W)
         # Create Lat,Lon Entry Boxes
-        self.latVar = tk.DoubleVar()
+        self.latVar = tk.StringVar()
         self.latEntry = tk.Entry(self,textvariable=self.latVar,width=10)
-        self.latVar.set(-37.958926)
+        self.latVar.set('-37.958926')
         self.latEntry.grid(column=1, row=1, sticky=tk.W)
-        self.lonVar = tk.DoubleVar()
+        self.lonVar = tk.StringVar()
         self.lonEntry = tk.Entry(self,textvariable=self.lonVar,width=10)
         self.lonVar.set(145.238343)
         self.lonEntry.grid(column=1, row=2, sticky=tk.W)
@@ -34,11 +36,11 @@ class Origin(ttk.Frame):
         self.altLabel = ttk.Label(self, text="Altitude").grid(column=3, row=1, sticky=tk.W)
         self.headLabel = ttk.Label(self, text="Heading").grid(column=3, row=2, sticky=tk.W)
         # Create Altitude, Heading Entry Boxes
-        self.altVar = tk.DoubleVar()
+        self.altVar = tk.StringVar()
         self.altEntry = tk.Entry(self,textvariable=self.altVar,width=10)
         self.altVar.set(44)
         self.altEntry.grid(column=4, row=1, sticky=tk.W)
-        self.headVar = tk.DoubleVar()
+        self.headVar = tk.StringVar()
         self.headEntry = tk.Entry(self,textvariable=self.headVar,width=10)
         self.headVar.set(0)
         self.headEntry.grid(column=4, row=2, sticky=tk.W)
@@ -50,39 +52,55 @@ class Origin(ttk.Frame):
         
         
     def on_lat_changed(self,*args):
-        # Lattitude Changed
-        lat = self.latVar.get()
-        if (len(str(lat))>1):
-            if (lat<-90 or lat>90):
+        # Latitude Changed
+        latStr = self.latVar.get()
+        valid, lat = tools.validateFloat(latStr)
+        
+        if not valid:
+            tkMessageBox.showerror(message="Latitude must be between -90 and 90.")
+            self.latVar.set(0)
+        else:
+            if (lat<-90) or (lat>90):
                 tkMessageBox.showerror(message="Latitude must be between -90 and 90.")
-                if (lat<-90):
-                    self.latVar.set(-90)
-                elif (lat>90):
-                    self.latVar.set(90)
+                self.latVar.set(cmp(lat,0)*90)
 
     def on_lon_changed(self,*args):
         # Longitude Changed
-        lon = self.lonVar.get()
-        if (lon<-180 or lon>180):
+        lonStr = self.lonVar.get()
+        valid, lon = tools.validateFloat(lonStr)
+        
+        if not valid:
             tkMessageBox.showerror(message="Longitude must be between -180 and 180.")
-            if (lat<-180):
-                self.latVar.set(-180)
-            elif (lat>180):
-                self.latVar.set(180)
+            self.lonVar.set(0) 
+        else:
+            if (lon<-180) or (lon>180):
+                tkMessageBox.showerror(message="Longitude must be between -180 and 180.")
+                self.lonVar.set(cmp(lon,0)*180)
     
     def on_alt_changed(self,*args):
         # Altitude Changed
-        pass
+        altStr = self.altVar.get()
+        valid, alt = tools.validateFloat(altStr)
+        
+        if not valid:
+            tkMessageBox.showerror(message="Altitude must be a float.")
+            self.altVar.set(0) 
         
     def on_head_changed(self,*args):
         # Heading Changed
-        head = self.headVar.get()
-        if (head<0 or head>360):
+        headStr = self.headVar.get()
+        valid, head = tools.validateFloat(headStr)
+        
+        if not valid:
             tkMessageBox.showerror(message="Heading must be between 0 and 360.")
-            if (lat<0):
-                self.latVar.set(0)
-            elif (lat>360):
-                self.latVar.set(360)
+            self.headVar.set(0)
+        else:
+            if (head<0):
+                tkMessageBox.showerror(message="Heading must be between 0 and 360.")
+                self.headVar.set('0')
+            elif (head>360):
+                tkMessageBox.showerror(message="Heading must be between 0 and 360.")
+                self.headVar.set('360')
 
     def writeConfig(self,f):
         '''# Writes the display section of the config to file

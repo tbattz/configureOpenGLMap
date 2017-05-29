@@ -73,3 +73,34 @@ class Generate(ttk.Frame):
         # Show dialog
         tkMessageBox.showinfo(message="File written to %s" % filename)
         
+    
+def valid_0255(string):
+     # Check if string is valid from 0 to 255
+     result = False
+     if (string.isdigit()):
+         val = int(string)
+         if (val>=0 and val <=255):
+             result = True
+             
+     return result
+
+
+def validateFloat(string):
+    # Checks if a string is a valid float
+    valid = True
+    if len(string)>0:
+        if (string == '-'):
+            val = 0
+        else:
+            try:
+                val = float(string)
+            except ValueError:
+                val = 0
+                valid = False
+    else:
+        val = 0
+                
+    return valid, val
+        
+      
+        

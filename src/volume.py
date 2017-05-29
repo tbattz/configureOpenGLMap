@@ -23,7 +23,7 @@ from matplotlib.figure import Figure
 from scipy.misc import imread
 import matplotlib.cbook as cbook
 
-import editPoints
+import editPoints, tools
 
 import os, math, time
 
@@ -143,10 +143,10 @@ class Volume(ttk.Frame):
         self.cid = self.fig.canvas.mpl_connect('key_press_event',self.on_key_pressed)
         
         # Get origin
-        lat = self.originFrame.latVar.get()
-        lon = self.originFrame.lonVar.get()
-        alt = self.originFrame.altVar.get()
-        head = self.originFrame.headVar.get()
+        lat = float(self.originFrame.latVar.get())
+        lon = float(self.originFrame.lonVar.get())
+        alt = float(self.originFrame.altVar.get())
+        head = float(self.originFrame.headVar.get())
         self.origin = [lat, lon, alt, head]
         
         # Set Axes Limits
@@ -787,9 +787,9 @@ class PolygonLine():
         # Any RGB Entry Box Changes
         # Check if entry is valid
         if (len(var.get()) > 0):
-            rCheck = self.valid_0255(self.rVar.get())
-            gCheck = self.valid_0255(self.gVar.get())
-            bCheck = self.valid_0255(self.bVar.get()) 
+            rCheck = tools.valid_0255(self.rVar.get())
+            gCheck = tools.valid_0255(self.gVar.get())
+            bCheck = tools.valid_0255(self.bVar.get()) 
             if (rCheck and gCheck and bCheck):
                 # Change Colour
                 colVec = [int(self.rVar.get())/255.0,int(self.gVar.get())/255.0,int(self.bVar.get())/255.0]
@@ -802,16 +802,9 @@ class PolygonLine():
                 self.polygon.reDrawPolyPoints()
             else:
                 tkMessageBox.showerror(message="RGB Values must be an integer from 0 to 255!")
+                var.set('0')
 
-    def valid_0255(self,string):
-        # Check if string is valid from 0 to 255
-        result = False
-        if (string.isdigit()):
-            val = int(string)
-            if (val>=0 and val <=255):
-                result = True
-                
-        return result
+ 
 
     def on_edit_points(self,*args):
         # Edit points manually
