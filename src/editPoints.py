@@ -8,6 +8,8 @@ import tkinter as tk
 from tkinter import ttk
 import tkMessageBox
 
+import tools
+
 class EditPointsFrame:
     # Frame to edit coordinates of the polygon
     def __init__(self,master,polygonLine):
@@ -120,9 +122,18 @@ class EntryRow:
     
     def on_lat_change(self,*args):
         if (not self.firstLoad) and (not self.moving):
+            # Check if latitude valid
+            valid, lat = tools.validateFloat(self.latVar.get())
+            if not valid:
+                tkMessageBox.showerror(message="Latitude must be between -90 and 90.")
+                self.latVar.set(0)
+            else:
+                if (lat<-90) or (lat>90):
+                    tkMessageBox.showerror(message="Latitude must be between -90 and 90.")
+                    self.latVar.set(cmp(lat,0)*90)
+            
             # Lat Entry changes
             point = self.polygonLine.polygon.pointList[self.num]
-            lat = float(self.latVar.get())
             lon = float(self.lonVar.get())
             # Set values
             point.y = lat
@@ -133,10 +144,19 @@ class EntryRow:
     
     def on_lon_change(self,*args):
         if (not self.firstLoad) and (not self.moving):
+            # Check if longitude valid
+            valid, lon = tools.validateFloat(self.lonVar.get())
+            if not valid:
+                tkMessageBox.showerror(message="Longitude must be between -180 and 180.")
+                self.lonVar.set(0) 
+            else:
+                if (lon<-180) or (lon>180):
+                    tkMessageBox.showerror(message="Longitude must be between -180 and 180.")
+                    self.lonVar.set(cmp(lon,0)*180)
+            
             # Lon Entry changes
             point = self.polygonLine.polygon.pointList[self.num]
             lat = float(self.latVar.get())
-            lon = float(self.lonVar.get())
             # Set values
             point.x = lon
             point.center = lon, lat
@@ -146,14 +166,25 @@ class EntryRow:
         
     def on_lowAlt_change(self,*args):
         if (not self.firstLoad) and (not self.moving):
+            # Check if low alt valid
+            valid, lowAlt = tools.validateFloat(self.lowAltVar.get())
+            if not valid:
+                tkMessageBox.showerror(message="Low Altitude (m) must be a float.")
+                self.lowAltVar.set(0)
+            
             # Low Alt Entry changes
-            self.polygonLine.polygon.pointList[self.num].lowHeight = float(self.lowAltVar.get())
+            self.polygonLine.polygon.pointList[self.num].lowHeight = float(lowAlt)
                 
     def on_highAlt_change(self,*args):
         if (not self.firstLoad) and (not self.moving):
+            # Check if high alt valid
+            valid, highAlt = tools.validateFloat(self.highAltVar.get())
+            if not valid:
+                tkMessageBox.showerror(message="High Altitude (m) must be a float.")
+                self.highAltVar.set(float(self.lowAltVar.get())+1)
             # High Alt Entry changes
-            self.polygonLine.polygon.pointList[self.num].h = float(self.highAltVar.get())
-            self.polygonLine.polygon.pointList[self.num].heightAnn.set_text(self.highAltVar.get())
+            self.polygonLine.polygon.pointList[self.num].h = float(highAlt)
+            self.polygonLine.polygon.pointList[self.num].heightAnn.set_text(highAlt)
             # Redraw
             self.polygonLine.polygon.reDrawPolyPoints()
             
