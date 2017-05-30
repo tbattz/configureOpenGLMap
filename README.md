@@ -19,6 +19,8 @@ The origin of the world is set here, in terms of the lattitude (degrees), longit
 ## Volume
 Define volumes in 3D space to draw. These can be used to define no-fly areas, buildings or obstacles. Each volume has an associated RGB (0-255) colour, an alpha transparency (0 is fully transparent). The points can be moved by left clicking and dragging them. New points can be added by toggling the radio button to the desired polygon, and left clicking in the desired location on the map. To remove a point, right click on it. A volume must have at least 3 points. Finer control of the location of the points is given with the Edit Points button, which opens another dialog to manually adjust the lattitude and longitude of each of the points, as well as setting the bottom (low altitude) and top (high altitude) of the polygon at each of the points.
 
+The map can moved around with the arrow keys, and zoomed in and out with the +,- keys and scroll wheel. Moving the map around will start downloading some of the map tiles. The downloading of tiles is more efficient in the main program, than it is in the configuration tool, so it is suggested you use that to download most of your maps.
+
 ## Generate
 Once each of the options have been filled in correctly, a configuration file can be generated using the "Generate Configuration" button. If the options are in correct, you will get a warning popup. If they are required options, then no config file will be generated, while if they are optional, a config file will be generated with these incorrect selections missing.
 
