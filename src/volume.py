@@ -358,7 +358,6 @@ class Volume(ttk.Frame):
                                 if poly.polygonLine.newWindow is not None:
                                     entryRow = poly.polygonLine.newWindow.entryRow[onPoint]
                                     entryRow.on_remove_row()
-                                    #poly.polygonLine.newWindow.entryRow.remove(entryRow)
                                     # Renumber points and move rows
                                     editPointsWind = poly.polygonLine.newWindow
                                     i = -1

@@ -94,7 +94,8 @@ class Aircraft(ttk.Frame):
             self.fileLabel[row] = self.filename[row]
         
         # Set Button Label
-        self.button[row].config(text=self.fileLabel[row])
+        name = self.fileLabel[row].split('/')[-1]
+        self.button[row].config(text=name)
         
     def on_add_row(self):
         self.addRow()
@@ -102,45 +103,49 @@ class Aircraft(ttk.Frame):
     def on_remove_row(self):
 	       self.removeRow()
         
-    def writeConfig(self,f,row):
+    def writeConfig(self,f,row,errorMsg):
     	# Writes single aircraft information to file
-    	# Check aircraft	
+    	# Check aircraft
     	okay = True
     	if (len(self.name[row].get())<1):
     		okay = False
-    	 	tkMessageBox.showerror(message="Aircraft name is empty!: Row %i" % (row+1))
+    	 	errorMsg.append("Aircraft name is empty!: Row %i" % (row+1))
     	if (self.fileLabel[row] == ""):
     		okay = False
-    		tkMessageBox.showerror(message="No file selected for aircraft!: Row %i" % (row+1))
+    		errorMsg.append("No file selected for aircraft!: Row %i" % (row+1))
     	if (self.fileLabel[row].count(" ")>0):
     		okay = False
-    		tkMessageBox.showerror(message="File Path cannot contain spaces!: Row %i" % (row+1))
+    		errorMsg.append("File Path cannot contain spaces!: Row %i" % (row+1))
     	if not self.checkIP(self.ip[row].get()):
     		okay = False
-    		tkMessageBox.showerror(message="Invalid IP Address for aircraft!: Row %i" % (row+1))
+    		errorMsg.append("Invalid IP Address for aircraft!: Row %i" % (row+1))
     	port = self.portEntry[row].get()
     	if not port.isdigit():
     		okay = False
-    		tkMessageBox.showerror(message="Invalid port number! Aircraft row: %i\nPort number must be from 1024 to 49151." % (row+1))			
+    		errorMsg.append("Invalid port number! Aircraft row: %i\nPort number must be from 1024 to 49151." % (row+1))			
     	else:
     		portInt = int(port)
     		if (portInt<1024) or (portInt>49151):
     			okay = False
-    			tkMessageBox.showerror(message="Invalid port number! Aircraft row: %i\nPort number must be from 1024 to 49151" % (row+1))
+    			errorMsg.append("Invalid port number! Aircraft row: %i\nPort number must be from 1024 to 49151" % (row+1))
     	
     	if not okay:
-    		tkMessageBox.showerror(message="Skipped aircraft row: %i" % (row+1))	
+    		errorMsg.append("Skipped aircraft row: %i" % (row+1))	
     	else:	
     		# Write Data
     		f.write('%s aircraft %s %s %s\n' % (self.name[row].get(),self.filename[row],self.ip[row].get(),self.portEntry[row].get()))
 	
+        return errorMsg
 
     def writeAllConfig(self,f):
     	# Writes all aircraft to file
+        errorMsg = []
     	f.write("# Aircraft\n")
     	for i in range(0,len(self.name)):
-    		self.writeConfig(f,i)
+    		errorMsg = self.writeConfig(f,i,errorMsg)
     	f.write("\n")
+        
+        return errorMsg
         
     def checkIP(self,ipStr):
     	# Checks if string is a valid IPV4 address

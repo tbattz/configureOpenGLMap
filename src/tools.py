@@ -65,10 +65,18 @@ class Generate(ttk.Frame):
         # Display Section 
         self.displayFrame.writeConfig(f)
         # Aircraft Section
-        self.aircraftFrame.writeAllConfig(f)
+        errorMsg = self.aircraftFrame.writeAllConfig(f)
+        # Origin Section
+        self.originFrame.writeConfig(f)
         
         # Close file
         f.close()
+        
+        # Show error dialog
+        errorStr = ""
+        for str in errorMsg:
+            errorStr+=str+'\n'
+        tkMessageBox.showinfo(message=errorStr)
         
         # Show dialog
         tkMessageBox.showinfo(message="File written to %s" % filename)

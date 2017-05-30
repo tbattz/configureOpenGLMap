@@ -102,15 +102,31 @@ class Origin(ttk.Frame):
                 tkMessageBox.showerror(message="Heading must be between 0 and 360.")
                 self.headVar.set('360')
 
+    def checkEmptyEntry(self,str):
+        # Checks if the entry is empty or '-'
+        if (str == "") or (str == "-"):
+            val = "0"
+        else:
+            val = str
+            
+        return val
+
     def writeConfig(self,f):
-        '''# Writes the display section of the config to file
-            f.write("# Display Settings\n")
-            f.write("screenID int %i\n" % (self.currMon+1))
-            f.write("xRes int %i\n" % int(self.xResVar.get()))
-            f.write("yRes int %i\n" % int(self.yResVar.get()))
-            f.write("fullscreen bool %i\n" % self.fsCheckVar.get())
-        f.write("\n")'''
-        pass
+        # Writes the display section of the config to file
+        # Check for empty entries
+        lat = self.checkEmptyEntry(self.latVar.get())
+        lon = self.checkEmptyEntry(self.lonVar.get()) 
+        alt = self.checkEmptyEntry(self.altVar.get()) 
+        head = self.checkEmptyEntry(self.headVar.get()) 
+        # Write to file
+        f.write("# Origin Settings\n")
+        f.write("origin ")
+        f.write(lat + " ")
+        f.write(lon + " ")
+        f.write(alt + " ")
+        f.write(head)
+        f.write("\n")
+        
             
         
 
