@@ -68,6 +68,8 @@ class Generate(ttk.Frame):
         errorMsg = self.aircraftFrame.writeAllConfig(f)
         # Origin Section
         self.originFrame.writeConfig(f)
+        # Volume Section
+        errorMsg2 = self.volumeFrame.writeAllConfig(f)
         
         # Close file
         f.close()
@@ -76,7 +78,10 @@ class Generate(ttk.Frame):
         errorStr = ""
         for str in errorMsg:
             errorStr+=str+'\n'
-        tkMessageBox.showinfo(message=errorStr)
+        for str in errorMsg2:
+            errorStr+=str+'\n'
+        if (len(errorStr)>0):
+            tkMessageBox.showinfo(message=errorStr)
         
         # Show dialog
         tkMessageBox.showinfo(message="File written to %s" % filename)

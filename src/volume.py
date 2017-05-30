@@ -429,6 +429,47 @@ class Volume(ttk.Frame):
                         else:
                             if (i,j,self.zoom) not in self.downloadQueue:
                                 self.downloadQueue.append((i,j,self.zoom))             
+        
+    def writeConfig(self,f,row,errorMsg):
+        # Writes single aircraft information to file
+        # Check name
+        okay = True
+        polygonLine = self.polygonRows[row]
+        if (len(polygonLine.nameVar.get())==0):
+            okay = False
+            errorMsg.append("Volume name for row %i is empty!" % (row+1))
+        
+        if not okay:
+            errorMsg.append("Skipped volume row: %i" % (row+1))
+        else:
+            # Write Data
+            name   = polygonLine.nameVar.get()
+            red    = polygonLine.rVar.get()
+            green  = polygonLine.gVar.get()
+            blue   = polygonLine.bVar.get()
+            alpha  = polygonLine.alphaVar.get()
+            numPts = len(polygonLine.polygon.pointList)
+            f.write('volume "%s" %s %s %s %s %i ' % (name,red,green,blue,alpha,numPts))
+            for pt in polygonLine.polygon.pointList:
+                lat = pt.y
+                lon = pt.x
+                lowAlt  = pt.lowHeight
+                highAlt = pt.highHeight
+                f.write('(%f,%f,%f,%f) ' % (lat,lon,lowAlt,highAlt))
+            f.write('\n')
+            
+        return errorMsg
+        
+    def writeAllConfig(self,f):
+        # Writes all volume information to file
+        errorMsg = []
+        f.write('# Volumes\n')
+        for i in range(0,len(self.polygonRows)):
+            errorMsg = self.writeConfig(f,i,errorMsg)
+        f.write('\n')
+    
+        return errorMsg
+    
     
     
         
