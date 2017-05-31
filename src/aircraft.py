@@ -110,6 +110,9 @@ class Aircraft(ttk.Frame):
     	if (len(self.name[row].get())<1):
     		okay = False
     	 	errorMsg.append("Aircraft name is empty!: Row %i" % (row+1))
+        if (len(self.name[row].get().split())>1):
+            okay = False
+            errorMsg.append("Aircraft name cannot contain spaces!: Row %i" % (row+1))
     	if (self.fileLabel[row] == ""):
     		okay = False
     		errorMsg.append("No file selected for aircraft!: Row %i" % (row+1))

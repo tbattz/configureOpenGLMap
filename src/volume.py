@@ -438,6 +438,9 @@ class Volume(ttk.Frame):
         if (len(polygonLine.nameVar.get())==0):
             okay = False
             errorMsg.append("Volume name for row %i is empty!" % (row+1))
+        if (len(polygonLine.nameVar.get().split())>1):
+            okay = False
+            errorMsg.append("Volume name cannot contain spaces!: Row %i" % (row+1))
         
         if not okay:
             errorMsg.append("Skipped volume row: %i" % (row+1))
@@ -449,7 +452,7 @@ class Volume(ttk.Frame):
             blue   = polygonLine.bVar.get()
             alpha  = polygonLine.alphaVar.get()
             numPts = len(polygonLine.polygon.pointList)
-            f.write('volume "%s" %s %s %s %s %i ' % (name,red,green,blue,alpha,numPts))
+            f.write('volume %s %s %s %s %s %i ' % (name,red,green,blue,alpha,numPts))
             for pt in polygonLine.polygon.pointList:
                 lat = pt.y
                 lon = pt.x
@@ -724,7 +727,7 @@ class PolygonLine():
         # Create polygon name entry box
         self.nameVar = tk.StringVar()
         self.nameEntry = tk.Entry(self.masterFrame,textvariable=self.nameVar,width=12)
-        self.nameVar.set("Polygon %i" % (row-1))
+        self.nameVar.set("Polygon_%i" % (row-1))
         self.nameVar.trace('w',self.on_name_change)
         self.nameEntry.grid(column=0,row=row,sticky=tk.W)
         # Colour Generation

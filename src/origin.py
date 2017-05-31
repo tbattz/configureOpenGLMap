@@ -125,7 +125,7 @@ class Origin(ttk.Frame):
         f.write(lon + " ")
         f.write(alt + " ")
         f.write(head)
-        f.write("\n")
+        f.write("\n\n")
         
             
         
