@@ -133,7 +133,7 @@ class Aircraft(ttk.Frame):
     		errorMsg.append("Skipped aircraft row: %i" % (row+1))	
     	else:	
     		# Write Data
-    		f.write('%s aircraft %s %s %s\n' % (self.name[row].get(),self.filename[row],self.ip[row].get(),self.portEntry[row].get()))
+    		f.write('aircraft %s %s %s %s\n' % (self.name[row].get(),self.filename[row],self.ip[row].get(),self.portEntry[row].get()))
 	
         return errorMsg
 
