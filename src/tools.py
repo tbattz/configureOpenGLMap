@@ -64,10 +64,10 @@ class Generate(ttk.Frame):
         f.write("\n")
         # Display Section 
         self.displayFrame.writeConfig(f)
-        # Aircraft Section
-        errorMsg = self.aircraftFrame.writeAllConfig(f)
         # Origin Section
         self.originFrame.writeConfig(f)
+        # Aircraft Section
+        errorMsg = self.aircraftFrame.writeAllConfig(f)
         # Volume Section
         errorMsg2 = self.volumeFrame.writeAllConfig(f)
         
