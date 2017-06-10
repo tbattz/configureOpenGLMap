@@ -49,7 +49,37 @@ class Origin(ttk.Frame):
         self.lonVar.trace("w",self.on_lon_changed)
         self.altVar.trace("w",self.on_alt_changed)
         self.headVar.trace("w",self.on_head_changed)
+        # Volume Frame
+        self.volFrame = None
         
+    def updateMapOnOriginMove(self):
+        # Update the map limits on moving the origin
+        # Change axes limits
+        if (self.volFrame is not None):
+            # Difference to current origin
+            lat = float(self.latVar.get())
+            lon = float(self.lonVar.get())
+            alt = float(self.altVar.get())
+            head = float(self.headVar.get())
+            # Set Axes Limits
+            self.volFrame.origin = [lat, lon, alt, head]
+            scale = self.volFrame.latLonScale(self.volFrame.origin[0])
+            diff = (2*0.0025)*scale/2.0
+            self.volFrame.axes.set_xlim(self.volFrame.origin[1]-0.0025-diff,self.volFrame.origin[1]+0.0025+diff)
+            self.volFrame.axes.set_ylim(self.volFrame.origin[0]-0.0025,self.volFrame.origin[0]+0.0025)
+                
+            # Adjust Limits
+            self.volFrame.checkLimits()
+            
+            # Check Tiles
+            self.volFrame.checkRequiredTiles()
+                
+            # Redraw
+            for polyRow in self.volFrame.polygonRows:
+                polyRow.polygon.reDrawPolyPoints()
+                
+            # Redraw Canvas
+            self.volFrame.canvas.draw()
         
     def on_lat_changed(self,*args):
         # Latitude Changed
@@ -63,6 +93,9 @@ class Origin(ttk.Frame):
             if (lat<-90) or (lat>90):
                 tkMessageBox.showerror(message="Latitude must be between -90 and 90.")
                 self.latVar.set(cmp(lat,0)*90)
+            else:
+                # Update Map Region
+                self.updateMapOnOriginMove()
 
     def on_lon_changed(self,*args):
         # Longitude Changed
