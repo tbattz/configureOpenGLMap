@@ -11,6 +11,7 @@ import getpass
 
 import os, sys
 import time
+import tkFileDialog
 
 
 
@@ -50,15 +51,26 @@ class Generate(ttk.Frame):
         print 1
         
     def on_save_config(self):
-        print 1
+        f = tkFileDialog.asksaveasfile(mode='w',defaultextension=".txt",initialdir='../../Configs/',filetypes=(("Configuration Files","*.txt"),))
+        if f is not None:
+            # Write File
+            self.write_file(f)
     
     def on_gen_config(self):
+        # Generates the current configuration
+        filename = 'currentConfig.txt'
+        directory = '../../Configs/'
         # Check Config directory exists
-        if not os.path.isdir('../../Configs'):
-            os.mkdir('../../Configs')
+        if not os.path.isdir(directory):
+            os.mkdir(directory)
+        # Open File
+        f = open(directory + filename,'w')
+        # Write File
+        self.write_file(f)
+
+    def write_file(self,f):
+        # Writes the current config to file
         # Print Header
-        filename = '../../Configs/currentConfig.txt'
-        f = open(filename,'w')
         f.write("# OpenGLMap Configuration File\n")
         f.write("# Created %s by %s\n" % (time.strftime("%c"),getpass.getuser()))
         f.write("\n")
@@ -84,7 +96,7 @@ class Generate(ttk.Frame):
             tkMessageBox.showinfo(message=errorStr)
         
         # Show dialog
-        tkMessageBox.showinfo(message="File written to %s" % filename)
+        tkMessageBox.showinfo(message="File written to %s" % f.name)
         
     
 def valid_0255(string):
