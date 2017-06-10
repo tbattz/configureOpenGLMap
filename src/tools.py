@@ -48,10 +48,13 @@ class Generate(ttk.Frame):
         self.root.quit()
         
     def on_load_config(self):
-        print 1
+        # Loads the config file
+        filename = tkFileDialog.askopenfilename(defaultextension=".txt",title="Load Configuration",initialdir="../../Configs/",filetypes=(("Configuration Files","*.txt"),))
+        if len(filename)>0:
+            self.parseConfig(filename)
         
     def on_save_config(self):
-        f = tkFileDialog.asksaveasfile(mode='w',defaultextension=".txt",initialdir='../../Configs/',filetypes=(("Configuration Files","*.txt"),))
+        f = tkFileDialog.asksaveasfile(mode='w',defaultextension=".txt",title="Save Configuratoin",initialdir='../../Configs/',filetypes=(("Configuration Files","*.txt"),))
         if f is not None:
             # Write File
             self.write_file(f)
@@ -98,6 +101,116 @@ class Generate(ttk.Frame):
         # Show dialog
         tkMessageBox.showinfo(message="File written to %s" % f.name)
         
+    def parseConfig(self,filename):
+        # Parses the config file
+        # Open File
+        f = open(filename)
+        # Remove all current aircraft rows
+        for i in range(0,len(self.aircraftFrame.name)):
+            self.aircraftFrame.removeRow()
+        # Remove all volumes
+        for i in range(0,len(self.volumeFrame.polygonRows)):
+            self.volumeFrame.on_remove_row()
+        # Counters
+        aircraftNum = 0
+        volumeNum = -1
+        # Parse File
+        line = f.readline()
+        while len(line)>0:
+            lineSplit = line.split()
+            if len(lineSplit)>0:
+                if lineSplit[0][0]!='#':
+                    if lineSplit[0]=='screenID':
+                        if len(lineSplit)!=3:
+                            print "Incorrect screenID definition: %s" % line
+                        else:
+                            if int(lineSplit[2])>len(self.displayFrame.monList):
+                                print "Screen number is larger than the current number of screens. Setting to zero."
+                                self.displayFrame.varMonList.set(self.displayFrame.monList[0])
+                            else:
+                                self.displayFrame.varMonList.set(self.displayFrame.monList[int(lineSplit[2])-1])
+                    elif lineSplit[0]=='yRes':
+                        if len(lineSplit)!=3:
+                            print "Incorrect yRes definition: %s" % line
+                        else:
+                            self.displayFrame.yResVar.set(int(lineSplit[2]))
+                    elif lineSplit[0]=='xRes':
+                        if len(lineSplit)!=3:
+                            print "Incorrect xRes definition: %s" % line
+                        else:
+                            self.displayFrame.xResVar.set(int(lineSplit[2]))
+                    elif lineSplit[0]=='fullscreen':
+                        if len(lineSplit)!=3:
+                            print "Incorrect fullscreen definition: %s" % line
+                        else:
+                            self.displayFrame.fsCheckVar.set(int(lineSplit[2]))
+                    elif lineSplit[0]=='origin':
+                        if len(lineSplit)!=5:
+                            print "Incorrect origin definition: %s" % line
+                        else:
+                            self.originFrame.latVar.set(lineSplit[1])
+                            self.originFrame.lonVar.set(lineSplit[2])
+                            self.originFrame.altVar.set(lineSplit[3])
+                            self.originFrame.headVar.set(lineSplit[4])
+                    elif lineSplit[0]=='aircraft':
+                        if len(lineSplit)!=5:
+                            print "Incorrect aircraft definition: %s" % line
+                        else:
+                            aircraftNum += 1
+                            self.aircraftFrame.addRow()
+                            self.aircraftFrame.name[aircraftNum-1].set(lineSplit[1])
+                            self.aircraftFrame.filename[aircraftNum-1] = lineSplit[2]
+                            self.aircraftFrame.loadFile(aircraftNum-1,dialog=False)
+                            self.aircraftFrame.ip[aircraftNum-1].set(lineSplit[3])
+                            self.aircraftFrame.port[aircraftNum-1].set(lineSplit[4])
+                    elif lineSplit[0]=='volume':
+                        # Add Row
+                        self.volumeFrame.on_add_row()
+                        volumeNum += 1
+                        # Setup row
+                        self.volumeFrame.polygonRows[volumeNum].nameVar.set(lineSplit[1])
+                        self.volumeFrame.polygonRows[volumeNum].rVar.set(lineSplit[2])
+                        self.volumeFrame.polygonRows[volumeNum].gVar.set(lineSplit[3])
+                        self.volumeFrame.polygonRows[volumeNum].bVar.set(lineSplit[4])
+                        self.volumeFrame.polygonRows[volumeNum].alphaVar.set(lineSplit[5])
+                        numPts = int(lineSplit[6])
+                        poly = self.volumeFrame.polygonRows[volumeNum].polygon
+                        # Change positions of first three points
+                        for i in range(0,3):
+                            # Parse Point
+                            poly.removePoint(0)
+                        # Add pts (after first three)
+                        for i in range(0,numPts):
+                            # Parse Point
+                            pt = lineSplit[7+i]
+                            ptS = pt[1:-1].split(',')
+                            x = float(ptS[1]) # Lon
+                            y = float(ptS[0]) # Lat
+                            lowAlt = float(ptS[2])
+                            highAlt = float(ptS[3])
+                            self.volumeFrame.addPoint(poly,x,y,lowAlt=lowAlt,highAlt=highAlt)
+                            # Fix altitudes
+                            #poly.pointList[i].lowHeight = lowAlt
+                            #poly.pointList[i].highHeight = highAlt
+                        # Resort Points
+                        poly.resortPts()
+                        # Redraw Polygon
+                        poly.updatePoints()
+                        poly.reDrawPolyPoints()
+                        poly.fig.canvas.draw()
+                        # Redraw points
+                        for pt in poly.pointList:
+                            pt.axes.draw_artist(pt)
+                                                   
+                    else:
+                        print "Unable to parse line:"
+                        print line                  
+            
+            line = f.readline()
+        # Close File
+        f.close()
+        # Dialog
+        tkMessageBox.showinfo(message="Loaded file %s" % filename)
     
 def valid_0255(string):
      # Check if string is valid from 0 to 255

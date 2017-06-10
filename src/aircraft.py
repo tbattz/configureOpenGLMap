@@ -46,20 +46,20 @@ class Aircraft(ttk.Frame):
         self.name.append(tk.StringVar())
         row = len(self.name)-1
         self.nameEntry.append(tk.Entry(self,textvariable=self.name[row],width=10))
-        self.nameEntry[row].grid(column=0,row=row+1,sticky=tk.W, padx=5)
+        self.nameEntry[row].grid(column=0,row=row+2,sticky=tk.W, padx=5)
         # Create Model path selection
         self.button.append(ttk.Button(self, text="Select file", command= lambda: self.loadFile(row)))
-        self.button[row].grid(column=1,row=row+1,sticky=tk.W, padx=5)
+        self.button[row].grid(column=1,row=row+2,sticky=tk.W, padx=5)
         self.filename.append("")
         self.fileLabel.append("")
         # Create Socket IP Entry
         self.ip.append(tk.StringVar())
         self.ipEntry.append(tk.Entry(self,textvariable=self.ip[row],width=15))
-        self.ipEntry[row].grid(column=2,row=row+1,sticky=tk.W, padx=5)
+        self.ipEntry[row].grid(column=2,row=row+2,sticky=tk.W, padx=5)
         # Create Port Entry
         self.port.append(tk.StringVar())
         self.portEntry.append(tk.Entry(self,textvariable=self.port[row],width=8))
-        self.portEntry[row].grid(column=3,row=row+1,sticky=tk.W, padx=5)
+        self.portEntry[row].grid(column=3,row=row+2,sticky=tk.W, padx=5)
         # Set initial values
         self.name[row].set('Aircraft_'+str(row))
         self.ip[row].set("192.168.8."+str(row))
@@ -67,7 +67,7 @@ class Aircraft(ttk.Frame):
 
     def removeRow(self):
 	# Removes the last row
-	if len(self.name) > 1:
+	if len(self.name) > 0:
 	    del self.name[-1]
 	    self.nameEntry[-1].destroy()
 	    del self.nameEntry[-1]
@@ -82,9 +82,10 @@ class Aircraft(ttk.Frame):
 	    self.portEntry[-1].destroy()
 	    del self.portEntry[-1]
 
-    def loadFile(self,row):
-        # Opens the file load dialog window
-        self.filename[row] = filedialog.askopenfilename(filetypes=(("Object files","*.obj"),("All files","*.*")),initialdir="../../Models/")
+    def loadFile(self,row,dialog=True):
+        if dialog:
+            # Opens the file load dialog window
+            self.filename[row] = filedialog.askopenfilename(filetypes=(("Object files","*.obj"),("All files","*.*")),initialdir="../../Models/")
         
         # Cut filename if in models folder
         if "/Models/" in self.filename[row]:
@@ -166,15 +167,5 @@ class Aircraft(ttk.Frame):
     					good = False
     	
     	return good
-
-# TO ADD
-# AIRCRAFT +/- buttons for multiple aircraft
-# Set world origin in lat, lon, alt
-# Skybox folder selection
-# Plot toggle
-# Timing checks - check for new tiles time
-#               - aircraft mavlink delay time
-# Display fps
-# Display telemetry overlay toggle (more options to come, possibly aircraft name overlay)
-# Select terrain data
-        
+ 
+ 

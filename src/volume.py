@@ -281,6 +281,25 @@ class Volume(ttk.Frame):
         self.axes.set_xlim(xmin,xmax)
         self.axes.set_ylim(ymin,ymax)
  
+    def addPoint(self,poly,x,y,lowAlt=0,highAlt=10):
+        # Adds a new point given a polygon
+        poly.addNewPoint(DragPoint(self,self.fig,x,y,len(poly.pointList),lowAlt,highAlt,colTuple=poly.polygonLine.colour))
+        # Add Row to Edit Points dialog if open
+        editPointsWind = poly.polygonLine.newWindow
+        if editPointsWind is not None:
+            # Add Entry Row
+            i = editPointsWind.entryRow[-1].num + 1
+            editPointsWind.entryRow.append(editPoints.EntryRow(editPointsWind,editPointsWind.frame,editPointsWind.polygonLine,i+2,i))
+            # Renumber pts
+            i = -1
+            for pt in editPointsWind.entryRow:
+                i += 1
+                pt.num = i
+                pt.labelVar.set(str(i))
+            # Update Values
+            for row in editPointsWind.entryRow:
+                row.updateFromPolygon()
+ 
     def on_canvas_pressed(self,event):
         # Take focus
         self.canvas._tkcanvas.focus_set()
@@ -305,22 +324,7 @@ class Volume(ttk.Frame):
                         y = event.ydata
                         # Add new point and redaw
                         poly = self.polygonRows[self.addPtRadio.get()].polygon
-                        poly.addNewPoint(DragPoint(self,self.fig,x,y,len(poly.pointList),colTuple=poly.polygonLine.colour))
-                        # Add Row to Edit Points dialog if open
-                        editPointsWind = poly.polygonLine.newWindow
-                        if editPointsWind is not None:
-                            # Add Entry Row
-                            i = editPointsWind.entryRow[-1].num + 1
-                            editPointsWind.entryRow.append(editPoints.EntryRow(editPointsWind,editPointsWind.frame,editPointsWind.polygonLine,i+2,i))
-                            # Renumber pts
-                            i = -1
-                            for pt in editPointsWind.entryRow:
-                                i += 1
-                                pt.num = i
-                                pt.labelVar.set(str(i))
-                            # Update Values
-                            for row in editPointsWind.entryRow:
-                                row.updateFromPolygon()
+                        self.addPoint(poly,x,y)
 
             elif (event.button == 3):
                     # Right mouse button
@@ -590,7 +594,8 @@ class PolyArea(Polygon):
     def updatePoints(self):
         # Reparses the DragPoints and updates the polygon
         self.ptsFromDragPointList()
-        self.set_xy(self.pts)
+        if len(self.pts)>0:
+            self.set_xy(self.pts)
 
     def resortPts(self):
         # Resorts points to create a non-intersecting polygon
@@ -624,7 +629,7 @@ class DragPoint(patches.Ellipse):
     # Create lock that only one instance can hold at a time
     lock = None
     # A point that can be dragged with the mouse
-    def __init__(self,masterFrame,fig,x,y,id,colTuple,masterPolygon=None):
+    def __init__(self,masterFrame,fig,x,y,id,lowHeight,highHeight,colTuple,masterPolygon=None):
         patches.Ellipse.__init__(self,(x,y),0.00015,0.00015,fc=colTuple,alpha=0.75,edgecolor='k')
         self.masterFrame = masterFrame
         self.fig = fig
@@ -640,8 +645,8 @@ class DragPoint(patches.Ellipse):
         self.connect()
         
         # Add Annotation
-        self.lowHeight = 0
-        self.highHeight = 10
+        self.lowHeight = lowHeight
+        self.highHeight = highHeight
         self.ptAnn = self.axes.annotate(str(self.id),xy=(self.x,self.y),horizontalalignment='center',verticalalignment='center',color='white')
         
     def connect(self):
@@ -776,9 +781,9 @@ class PolygonLine():
         fig = self.masterFrame.fig
         origin = self.masterFrame.origin
         self.colour = [x / 255 for x in defcolours.allColours[self.colInt]]
-        points.append(DragPoint(self.masterFrame,fig,origin[1]-0.0005,origin[0]-0.0005,0,colTuple=self.colour))
-        points.append(DragPoint(self.masterFrame,fig,origin[1]+0.0005,origin[0]+0.0005,1,colTuple=self.colour))
-        points.append(DragPoint(self.masterFrame,fig,origin[1]+0.0005,origin[0]-0.0005,2,colTuple=self.colour))        
+        points.append(DragPoint(self.masterFrame,fig,origin[1]-0.0005,origin[0]-0.0005,0,0,10,colTuple=self.colour))
+        points.append(DragPoint(self.masterFrame,fig,origin[1]+0.0005,origin[0]+0.0005,1,0,10,colTuple=self.colour))
+        points.append(DragPoint(self.masterFrame,fig,origin[1]+0.0005,origin[0]-0.0005,2,0,10,colTuple=self.colour))        
          
         # Create Polygon
         self.polygon = PolyArea(self.masterFrame.fig, points, self, colTuple=self.colour)
