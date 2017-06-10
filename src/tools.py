@@ -54,7 +54,7 @@ class Generate(ttk.Frame):
             self.parseConfig(filename)
         
     def on_save_config(self):
-        f = tkFileDialog.asksaveasfile(mode='w',defaultextension=".txt",title="Save Configuratoin",initialdir='../../Configs/',filetypes=(("Configuration Files","*.txt"),))
+        f = tkFileDialog.asksaveasfile(mode='w',defaultextension=".txt",title="Save Configuration",initialdir='../../Configs/',filetypes=(("Configuration Files","*.txt"),))
         if f is not None:
             # Write File
             self.write_file(f)
@@ -189,9 +189,6 @@ class Generate(ttk.Frame):
                             lowAlt = float(ptS[2])
                             highAlt = float(ptS[3])
                             self.volumeFrame.addPoint(poly,x,y,lowAlt=lowAlt,highAlt=highAlt)
-                            # Fix altitudes
-                            #poly.pointList[i].lowHeight = lowAlt
-                            #poly.pointList[i].highHeight = highAlt
                         # Resort Points
                         poly.resortPts()
                         # Redraw Polygon
